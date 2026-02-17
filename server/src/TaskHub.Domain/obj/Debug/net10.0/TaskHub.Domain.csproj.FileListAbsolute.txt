@@ -9,3 +9,4 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Domain/obj/Debug/net10.0/refint/TaskHub.Domain.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Domain/obj/Debug/net10.0/TaskHub.Domain.pdb
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Domain/obj/Debug/net10.0/ref/TaskHub.Domain.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Domain/obj/Debug/net10.0/TaskHub.Domain.sourcelink.json

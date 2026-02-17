@@ -13,3 +13,4 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/refint/TaskHub.Application.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub.Application.pdb
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/ref/TaskHub.Application.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub.Application.sourcelink.json

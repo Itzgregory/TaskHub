@@ -15,3 +15,4 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/refint/TaskHub.Infrastructure.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub.Infrastructure.pdb
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/ref/TaskHub.Infrastructure.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub.Infrastructure.sourcelink.json
