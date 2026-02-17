@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "+gPLVZ9+d6Y=",
+  "success": true,
+  "projectFilePath": "/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/TaskHub.Infrastructure.csproj",
+  "expectedPackageFiles": [
+    "/Users/oparagregory/.nuget/packages/bcrypt.net-next/4.1.0/bcrypt.net-next.4.1.0.nupkg.sha512"
+  ],
+  "logs": []
+}

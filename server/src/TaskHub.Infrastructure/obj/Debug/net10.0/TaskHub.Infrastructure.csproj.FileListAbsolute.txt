@@ -1,0 +1,17 @@
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/bin/Debug/net10.0/TaskHub.Infrastructure.deps.json
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/bin/Debug/net10.0/TaskHub.Infrastructure.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/bin/Debug/net10.0/TaskHub.Infrastructure.pdb
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/bin/Debug/net10.0/TaskHub.Application.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/bin/Debug/net10.0/TaskHub.Domain.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/bin/Debug/net10.0/TaskHub.Application.pdb
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/bin/Debug/net10.0/TaskHub.Domain.pdb
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub.Infrastructure.csproj.AssemblyReference.cache
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub.Infrastructure.AssemblyInfoInputs.cache
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub.Infrastructure.AssemblyInfo.cs
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub.Infrastructure.csproj.CoreCompileInputs.cache
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub..7DF974BA.Up2Date
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub.Infrastructure.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/refint/TaskHub.Infrastructure.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/TaskHub.Infrastructure.pdb
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/obj/Debug/net10.0/ref/TaskHub.Infrastructure.dll

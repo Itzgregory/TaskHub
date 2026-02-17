@@ -1,0 +1,6 @@
+{
+  "TaskHub.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/oparagregory\/Desktop\/projects\/TaskHub\/server\/src\/TaskHub.Api",
+  "TaskHub.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/oparagregory\/Desktop\/projects\/TaskHub\/server\/src\/TaskHub.Application",
+  "TaskHub.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/oparagregory\/Desktop\/projects\/TaskHub\/server\/src\/TaskHub.Domain",
+  "TaskHub.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/oparagregory\/Desktop\/projects\/TaskHub\/server\/src\/TaskHub.Infrastructure"
+}

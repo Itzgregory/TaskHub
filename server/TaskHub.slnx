@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TaskHub.Api/TaskHub.Api.csproj" />
+    <Project Path="src/TaskHub.Application/TaskHub.Application.csproj" />
+    <Project Path="src/TaskHub.Domain/TaskHub.Domain.csproj" />
+    <Project Path="src/TaskHub.Infrastructure/TaskHub.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TaskHub.IntegrationTests/TaskHub.IntegrationTests.csproj" />
+    <Project Path="tests/TaskHub.UnitTests/TaskHub.UnitTests.csproj" />
+  </Folder>
+</Solution>
