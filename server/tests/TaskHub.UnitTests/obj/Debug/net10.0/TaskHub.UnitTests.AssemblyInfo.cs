@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TaskHub.UnitTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7a85e3063728dd4f635a6156e5e3172681a0957f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7d689af5204edbf3cf6d48bea1c07a3630c23ac1")]
 [assembly: System.Reflection.AssemblyProductAttribute("TaskHub.UnitTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TaskHub.UnitTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
