@@ -1437,6 +1437,10 @@
         "dependencies": {
           "BCrypt.Net-Next": "4.1.0",
           "Microsoft.AspNetCore.Http": "2.3.9",
+          "Microsoft.Extensions.DependencyInjection": "10.0.3",
+          "Microsoft.Extensions.Hosting.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.3",
+          "Microsoft.Extensions.Options": "10.0.3",
           "TaskHub.Application": "1.0.0"
         },
         "compile": {

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "u7ZnQCZ/j1k=",
+  "dgSpecHash": "Rqb5Tmsrw3M=",
   "success": true,
   "projectFilePath": "/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Infrastructure/TaskHub.Infrastructure.csproj",
   "expectedPackageFiles": [
@@ -9,10 +9,16 @@
     "/Users/oparagregory/.nuget/packages/microsoft.aspnetcore.http.abstractions/2.3.0/microsoft.aspnetcore.http.abstractions.2.3.0.nupkg.sha512",
     "/Users/oparagregory/.nuget/packages/microsoft.aspnetcore.http.features/2.3.0/microsoft.aspnetcore.http.features.2.3.0.nupkg.sha512",
     "/Users/oparagregory/.nuget/packages/microsoft.aspnetcore.webutilities/2.3.0/microsoft.aspnetcore.webutilities.2.3.0.nupkg.sha512",
-    "/Users/oparagregory/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.0/microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
+    "/Users/oparagregory/.nuget/packages/microsoft.extensions.configuration.abstractions/10.0.3/microsoft.extensions.configuration.abstractions.10.0.3.nupkg.sha512",
+    "/Users/oparagregory/.nuget/packages/microsoft.extensions.dependencyinjection/10.0.3/microsoft.extensions.dependencyinjection.10.0.3.nupkg.sha512",
+    "/Users/oparagregory/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/10.0.3/microsoft.extensions.dependencyinjection.abstractions.10.0.3.nupkg.sha512",
+    "/Users/oparagregory/.nuget/packages/microsoft.extensions.diagnostics.abstractions/10.0.3/microsoft.extensions.diagnostics.abstractions.10.0.3.nupkg.sha512",
+    "/Users/oparagregory/.nuget/packages/microsoft.extensions.fileproviders.abstractions/10.0.3/microsoft.extensions.fileproviders.abstractions.10.0.3.nupkg.sha512",
+    "/Users/oparagregory/.nuget/packages/microsoft.extensions.hosting.abstractions/10.0.3/microsoft.extensions.hosting.abstractions.10.0.3.nupkg.sha512",
+    "/Users/oparagregory/.nuget/packages/microsoft.extensions.logging.abstractions/10.0.3/microsoft.extensions.logging.abstractions.10.0.3.nupkg.sha512",
     "/Users/oparagregory/.nuget/packages/microsoft.extensions.objectpool/8.0.11/microsoft.extensions.objectpool.8.0.11.nupkg.sha512",
-    "/Users/oparagregory/.nuget/packages/microsoft.extensions.options/8.0.2/microsoft.extensions.options.8.0.2.nupkg.sha512",
-    "/Users/oparagregory/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512",
+    "/Users/oparagregory/.nuget/packages/microsoft.extensions.options/10.0.3/microsoft.extensions.options.10.0.3.nupkg.sha512",
+    "/Users/oparagregory/.nuget/packages/microsoft.extensions.primitives/10.0.3/microsoft.extensions.primitives.10.0.3.nupkg.sha512",
     "/Users/oparagregory/.nuget/packages/microsoft.net.http.headers/2.3.8/microsoft.net.http.headers.2.3.8.nupkg.sha512"
   ],
   "logs": []
