@@ -25,7 +25,7 @@ public abstract class BaseApiController : ControllerBase
         });
     }
 
-    protected IActionResult NoContent()
+    protected new IActionResult NoContent()
     {
         return base.NoContent();
     }

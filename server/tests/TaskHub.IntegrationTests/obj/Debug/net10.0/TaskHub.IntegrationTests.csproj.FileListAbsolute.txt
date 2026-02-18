@@ -437,3 +437,4 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.genruntimeconfig.cache
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/ref/TaskHub.IntegrationTests.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.sourcelink.json
+/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/appsettings.Production.json
