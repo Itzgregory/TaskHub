@@ -7,19 +7,18 @@ public class AuditEntry : BaseEntity
 {
     public DateTime Timestamp { get; private set; }
     public Guid ActorUserId { get; private set; }
-    public Guid OrgId { get; private set; }
+    public Guid? OrgId { get; private set; }  // Made nullable
     public AuditAction Action { get; private set; }
     public EntityType EntityType { get; private set; }
     public Guid EntityId { get; private set; }
     public string CorrelationId { get; private set; } = string.Empty;
     public string? AdditionalInfo { get; private set; }
 
-    // Required by file storage deserialisation
     private AuditEntry() { }
 
     public static AuditEntry Create(
         Guid actorUserId,
-        Guid orgId,
+        Guid? orgId,  // Made nullable
         AuditAction action,
         EntityType entityType,
         Guid entityId,
@@ -29,9 +28,6 @@ public class AuditEntry : BaseEntity
         if (actorUserId == Guid.Empty)
             throw new ArgumentException("ActorUserId cannot be empty.", nameof(actorUserId));
 
-        if (orgId == Guid.Empty)
-            throw new ArgumentException("OrgId cannot be empty.", nameof(orgId));
-
         if (string.IsNullOrWhiteSpace(correlationId))
             throw new ArgumentException("CorrelationId cannot be empty.", nameof(correlationId));
 
@@ -39,7 +35,7 @@ public class AuditEntry : BaseEntity
         {
             Timestamp = DateTime.UtcNow,
             ActorUserId = actorUserId,
-            OrgId = orgId,
+            OrgId = orgId,  // Can be null for system events
             Action = action,
             EntityType = entityType,
             EntityId = entityId,

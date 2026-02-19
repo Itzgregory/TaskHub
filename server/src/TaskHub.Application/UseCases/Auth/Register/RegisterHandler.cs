@@ -1,6 +1,7 @@
 using TaskHub.Application.Common.Interfaces.Persistence;
 using TaskHub.Application.Common.Interfaces.Services;
 using TaskHub.Application.Common.Models;
+using TaskHub.Application.Common.Security; 
 using TaskHub.Domain.Entities;
 using TaskHub.Domain.Enums;
 
@@ -29,12 +30,12 @@ public class RegisterHandler
         RegisterCommand command,
         CancellationToken cancellationToken = default)
     {
-        // Validate input
-        RegisterValidator.Validate(command);
+        // CHANGE THIS: Replace Validate with SanitizeAndValidate
+        var sanitizedCommand = RegisterValidator.SanitizeAndValidate(command);
 
-        // Check if username already exists
+        // Check if username already exists (using sanitized username)
         var existingUser = await _userRepository.GetByUsernameAsync(
-            command.Username,
+            sanitizedCommand.Username,  // Use sanitized version
             cancellationToken);
 
         if (existingUser != null)
@@ -44,12 +45,12 @@ public class RegisterHandler
                 "This username is already taken.");
         }
 
-        // Hash password
-        var passwordHash = _passwordHasher.Hash(command.Password);
+        // Hash password (using sanitized password)
+        var passwordHash = _passwordHasher.Hash(sanitizedCommand.Password);  // Use sanitized version
 
-        // Create user
+        // Create user (with sanitized and normalized username)
         var user = User.Create(
-            command.Username,
+            sanitizedCommand.Username,  // Already lowercase and sanitized
             passwordHash,
             _dateTimeProvider.UtcNow);
 

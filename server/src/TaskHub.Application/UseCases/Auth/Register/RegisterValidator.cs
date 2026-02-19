@@ -1,49 +1,34 @@
+using TaskHub.Application.Common.Security;
 using TaskHub.Domain.Exceptions;
 
 namespace TaskHub.Application.UseCases.Auth.Register;
 
 public static class RegisterValidator
 {
-    private const int MinUsernameLength = 3;
-    private const int MaxUsernameLength = 50;
-    private const int MinPasswordLength = 8;
-    private const int MaxPasswordLength = 100;
-
-    public static void Validate(RegisterCommand command)
+    public static RegisterCommand SanitizeAndValidate(RegisterCommand command)
     {
         var errors = new Dictionary<string, string[]>();
 
-        // Username validation
-        if (string.IsNullOrWhiteSpace(command.Username))
-        {
-            errors["username"] = new[] { "Username is required." };
-        }
-        else if (command.Username.Length < MinUsernameLength)
-        {
-            errors["username"] = new[] { $"Username must be at least {MinUsernameLength} characters." };
-        }
-        else if (command.Username.Length > MaxUsernameLength)
-        {
-            errors["username"] = new[] { $"Username cannot exceed {MaxUsernameLength} characters." };
-        }
+        // Validate and normalize email
+        var normalizedEmail = EmailValidator.ValidateAndNormalizeEmail(
+            command.Username, errors, "email");
 
-        // Password validation
-        if (string.IsNullOrWhiteSpace(command.Password))
+        // Validate password with security checks
+        if (!PasswordValidator.ValidatePassword(command.Password, errors, "password"))
         {
-            errors["password"] = new[] { "Password is required." };
-        }
-        else if (command.Password.Length < MinPasswordLength)
-        {
-            errors["password"] = new[] { $"Password must be at least {MinPasswordLength} characters." };
-        }
-        else if (command.Password.Length > MaxPasswordLength)
-        {
-            errors["password"] = new[] { $"Password cannot exceed {MaxPasswordLength} characters." };
+            // Additional SQL injection check on password
+            if (SecuritySanitizer.ContainsSqlInjection(command.Password))
+            {
+                errors["password"] = new[] { "Password contains invalid characters." };
+            }
         }
 
         if (errors.Any())
         {
             throw new ValidationException(errors);
         }
+
+        // Return sanitized command
+        return new RegisterCommand(normalizedEmail, command.Password);
     }
 }

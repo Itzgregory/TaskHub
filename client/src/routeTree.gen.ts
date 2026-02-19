@@ -19,6 +19,7 @@ import { Route as DashboardSearchRouteImport } from './routes/dashboard.search'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
 import { Route as DashboardCompletedRouteImport } from './routes/dashboard.completed'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
+import { Route as AuthOrgSelectionRouteImport } from './routes/auth.org-selection'
 import { Route as AuthOnboardingRouteImport } from './routes/auth.onboarding'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as DashboardProjectsProjectIdRouteImport } from './routes/dashboard.projects.$projectId'
@@ -73,6 +74,11 @@ const AuthSignupRoute = AuthSignupRouteImport.update({
   path: '/auth/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthOrgSelectionRoute = AuthOrgSelectionRouteImport.update({
+  id: '/auth/org-selection',
+  path: '/auth/org-selection',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthOnboardingRoute = AuthOnboardingRouteImport.update({
   id: '/auth/onboarding',
   path: '/auth/onboarding',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/404': typeof R404Route
   '/auth/login': typeof AuthLoginRoute
   '/auth/onboarding': typeof AuthOnboardingRoute
+  '/auth/org-selection': typeof AuthOrgSelectionRoute
   '/auth/signup': typeof AuthSignupRoute
   '/dashboard/completed': typeof DashboardCompletedRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/404': typeof R404Route
   '/auth/login': typeof AuthLoginRoute
   '/auth/onboarding': typeof AuthOnboardingRoute
+  '/auth/org-selection': typeof AuthOrgSelectionRoute
   '/auth/signup': typeof AuthSignupRoute
   '/dashboard/completed': typeof DashboardCompletedRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/404': typeof R404Route
   '/auth/login': typeof AuthLoginRoute
   '/auth/onboarding': typeof AuthOnboardingRoute
+  '/auth/org-selection': typeof AuthOrgSelectionRoute
   '/auth/signup': typeof AuthSignupRoute
   '/dashboard/completed': typeof DashboardCompletedRoute
   '/dashboard/profile': typeof DashboardProfileRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/auth/login'
     | '/auth/onboarding'
+    | '/auth/org-selection'
     | '/auth/signup'
     | '/dashboard/completed'
     | '/dashboard/profile'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/auth/login'
     | '/auth/onboarding'
+    | '/auth/org-selection'
     | '/auth/signup'
     | '/dashboard/completed'
     | '/dashboard/profile'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/404'
     | '/auth/login'
     | '/auth/onboarding'
+    | '/auth/org-selection'
     | '/auth/signup'
     | '/dashboard/completed'
     | '/dashboard/profile'
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   R404Route: typeof R404Route
   AuthLoginRoute: typeof AuthLoginRoute
   AuthOnboardingRoute: typeof AuthOnboardingRoute
+  AuthOrgSelectionRoute: typeof AuthOrgSelectionRoute
   AuthSignupRoute: typeof AuthSignupRoute
   DashboardCompletedRoute: typeof DashboardCompletedRoute
   DashboardProfileRoute: typeof DashboardProfileRoute
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/org-selection': {
+      id: '/auth/org-selection'
+      path: '/auth/org-selection'
+      fullPath: '/auth/org-selection'
+      preLoaderRoute: typeof AuthOrgSelectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/onboarding': {
       id: '/auth/onboarding'
       path: '/auth/onboarding'
@@ -301,6 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   R404Route: R404Route,
   AuthLoginRoute: AuthLoginRoute,
   AuthOnboardingRoute: AuthOnboardingRoute,
+  AuthOrgSelectionRoute: AuthOrgSelectionRoute,
   AuthSignupRoute: AuthSignupRoute,
   DashboardCompletedRoute: DashboardCompletedRoute,
   DashboardProfileRoute: DashboardProfileRoute,

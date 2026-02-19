@@ -1,4 +1,4 @@
-import { AppLayout } from "../../components/layout/dasboard/AppLayout";
+import { AppLayout } from "../../components/layout/dashboard/AppLayout";
 import { useStore, actions } from "../../lib/store";
 import { useTheme } from "../../lib/theme-provider";
 import { Sun, Moon, Trash2, Download } from "lucide-react";

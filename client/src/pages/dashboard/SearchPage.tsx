@@ -1,6 +1,6 @@
 import { stripSearchParams } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { AppLayout } from "../../components/layout/dasboard/AppLayout";
+import { AppLayout } from "../../components/layout/dashboard/AppLayout";
 import { TaskList } from "../../components/features/TaskList";
 import { useStore } from "../../lib/store";
 

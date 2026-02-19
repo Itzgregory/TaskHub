@@ -1,7 +1,7 @@
 
 import { CheckCircle2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { AppLayout } from "../../components/layout/dasboard/AppLayout";
+import { AppLayout } from "../../components/layout/dashboard/AppLayout";
 import { TaskItem } from "../../components/features/TaskItem";
 import { useStore, actions } from "../../lib/store";
 import type { Task } from "../../lib/types";

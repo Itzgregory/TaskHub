@@ -8,9 +8,9 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub.Application.AssemblyInfoInputs.cache
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub.Application.AssemblyInfo.cs
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub.Application.csproj.CoreCompileInputs.cache
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub.Application.sourcelink.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub..3CC5887B.Up2Date
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub.Application.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/refint/TaskHub.Application.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub.Application.pdb
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/ref/TaskHub.Application.dll
-/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Application/obj/Debug/net10.0/TaskHub.Application.sourcelink.json

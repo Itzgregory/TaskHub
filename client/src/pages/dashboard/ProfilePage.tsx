@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { User, Save } from "lucide-react";
-import { AppLayout } from "../../components/layout/dasboard/AppLayout";
+import { AppLayout } from "../../components/layout/dashboard/AppLayout";
 import { useStore, actions } from "../../lib/store";
 
 export default function ProfilePage() {

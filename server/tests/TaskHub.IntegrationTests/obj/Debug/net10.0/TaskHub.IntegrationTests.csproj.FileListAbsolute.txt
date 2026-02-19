@@ -5,6 +5,7 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/TaskHub.Api.runtimeconfig.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/appsettings.Development.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/appsettings.json
+/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/appsettings.Production.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/TaskHub.Api.staticwebassets.endpoints.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/TaskHub.Api
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/MvcTestingAppManifest.json
@@ -323,7 +324,6 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/BCrypt.Net-Next.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/FluentAssertions.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Microsoft.AspNetCore.Mvc.Testing.dll
-/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Microsoft.AspNetCore.OpenApi.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Microsoft.AspNetCore.TestHost.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Microsoft.VisualStudio.CodeCoverage.Shim.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Microsoft.Extensions.DependencyModel.dll
@@ -337,7 +337,6 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Microsoft.VisualStudio.TestPlatform.Common.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/testhost.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Newtonsoft.Json.dll
-/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Scalar.AspNetCore.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Serilog.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Serilog.AspNetCore.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Serilog.Extensions.Hosting.dll
@@ -347,6 +346,9 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Serilog.Sinks.Console.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Serilog.Sinks.Debug.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Serilog.Sinks.File.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Swashbuckle.AspNetCore.Swagger.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerUI.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/xunit.assert.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/xunit.core.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/xunit.execution.dotnet.dll
@@ -430,11 +432,10 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.AssemblyInfoInputs.cache
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.AssemblyInfo.cs
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.csproj.CoreCompileInputs.cache
+/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.sourcelink.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub..A0AA7196.Up2Date
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/refint/TaskHub.IntegrationTests.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.pdb
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.genruntimeconfig.cache
 /Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/ref/TaskHub.IntegrationTests.dll
-/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/obj/Debug/net10.0/TaskHub.IntegrationTests.sourcelink.json
-/Users/oparagregory/Desktop/projects/TaskHub/server/tests/TaskHub.IntegrationTests/bin/Debug/net10.0/appsettings.Production.json

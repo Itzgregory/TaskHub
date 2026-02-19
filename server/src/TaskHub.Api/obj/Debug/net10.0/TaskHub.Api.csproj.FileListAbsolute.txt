@@ -1,5 +1,6 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/appsettings.Development.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/appsettings.json
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/appsettings.Production.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/TaskHub.Api.staticwebassets.endpoints.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/TaskHub.Api
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/TaskHub.Api.deps.json
@@ -7,10 +8,8 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/TaskHub.Api.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/TaskHub.Api.pdb
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/BCrypt.Net-Next.dll
-/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Microsoft.AspNetCore.OpenApi.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Microsoft.Extensions.DependencyModel.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Microsoft.OpenApi.dll
-/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Scalar.AspNetCore.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Serilog.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Serilog.AspNetCore.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Serilog.Extensions.Hosting.dll
@@ -20,6 +19,9 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Serilog.Sinks.Console.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Serilog.Sinks.Debug.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Serilog.Sinks.File.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Swashbuckle.AspNetCore.Swagger.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerGen.dll
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/Swashbuckle.AspNetCore.SwaggerUI.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/TaskHub.Application.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/TaskHub.Domain.dll
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/TaskHub.Infrastructure.dll
@@ -34,6 +36,7 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/TaskHub.Api.csproj.CoreCompileInputs.cache
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/TaskHub.Api.MvcApplicationPartsAssemblyInfo.cs
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/TaskHub.Api.MvcApplicationPartsAssemblyInfo.cache
+/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/TaskHub.Api.sourcelink.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/rjimswa.dswa.cache.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/rjsmrazor.dswa.cache.json
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json
@@ -49,5 +52,3 @@
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/TaskHub.Api.pdb
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/TaskHub.Api.genruntimeconfig.cache
 /Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/ref/TaskHub.Api.dll
-/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/obj/Debug/net10.0/TaskHub.Api.sourcelink.json
-/Users/oparagregory/Desktop/projects/TaskHub/server/src/TaskHub.Api/bin/Debug/net10.0/appsettings.Production.json

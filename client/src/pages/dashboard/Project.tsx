@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { Plus, Pencil, Trash2, Circle } from "lucide-react";
-import { AppLayout } from "../../components/layout/dasboard/AppLayout";
+import { AppLayout } from "../../components/layout/dashboard/AppLayout";
 import { TaskList } from "../../components/features/TaskList";
 import { TaskFormModal } from "../../components/features/TaskFormModal";
 import { useStore, actions } from "../../lib/store";
