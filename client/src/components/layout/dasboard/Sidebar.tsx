@@ -9,10 +9,10 @@ import { useStore, actions } from "../../../lib/store";
 import type { Project } from "../../../lib/types";
 
 const NAV_ITEMS = [
-  { label: "Today", icon: Sun, path: "/today" },
-  { label: "Upcoming", icon: CalendarDays, path: "/upcoming" },
-  { label: "All Tasks", icon: Inbox, path: "/tasks" },
-  { label: "Completed", icon: CheckCircle2, path: "/completed" },
+  { label: "Today", icon: Sun, path: "/dashboard/today" },
+  { label: "Upcoming", icon: CalendarDays, path: "/dashboard/upcoming" },
+  { label: "All Tasks", icon: Inbox, path: "/dashboard/task" },
+  { label: "Completed", icon: CheckCircle2, path: "/dashboard/completed" },
 ];
 
 const PROJECT_COLORS = [
