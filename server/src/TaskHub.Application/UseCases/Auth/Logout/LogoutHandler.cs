@@ -1,20 +1,33 @@
+using TaskHub.Application.Common.Interfaces.Persistence;
 using TaskHub.Application.Common.Interfaces.Services;
 
 namespace TaskHub.Application.UseCases.Auth.Logout;
 
 public class LogoutHandler
 {
-    public LogoutHandler()
+    private readonly ISessionRepository _sessionRepository;
+    private readonly ICurrentUserContext _currentUserContext;
+
+    public LogoutHandler(
+        ISessionRepository sessionRepository,
+        ICurrentUserContext currentUserContext)
     {
-        // i havent implemented this yet, since i am yet to do auth, and jwt cookies and all that which is beyond the requirements scope
+        _sessionRepository = sessionRepository;
+        _currentUserContext = currentUserContext;
     }
 
-    public Task HandleAsync(
+    public async Task HandleAsync(
         LogoutCommand command,
         CancellationToken cancellationToken = default)
     {
+        // Delete user's session if authenticated
+        if (_currentUserContext.IsAuthenticated)
+        {
+            await _sessionRepository.DeleteByUserIdAsync(
+                _currentUserContext.UserId,
+                cancellationToken);
+        }
+
         // Cookie clearing happens in the controller
-        // Audit logging will be added once we have proper authentication
-        return Task.CompletedTask;
     }
 }

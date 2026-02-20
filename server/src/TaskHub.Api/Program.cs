@@ -7,10 +7,13 @@ using TaskHub.Application.UseCases.Auth.Register;
 using TaskHub.Application.UseCases.Audit.List;
 using TaskHub.Application.UseCases.ImportExport.Export;
 using TaskHub.Application.UseCases.ImportExport.Import;
+using TaskHub.Application.UseCases.Onboarding.CompleteOnboarding;  
 using TaskHub.Application.UseCases.Organisations.AddMember;
 using TaskHub.Application.UseCases.Organisations.ChangeRole;
 using TaskHub.Application.UseCases.Organisations.Create;
+using TaskHub.Application.UseCases.Organisations.ListUserOrgs;    
 using TaskHub.Application.UseCases.Organisations.RemoveMember;
+using TaskHub.Application.UseCases.Organisations.SetActiveOrg;    
 using TaskHub.Application.UseCases.Todos.Archive;
 using TaskHub.Application.UseCases.Todos.Create;
 using TaskHub.Application.UseCases.Todos.Delete;
@@ -54,11 +57,15 @@ builder.Services.AddScoped<IOrganisationRepository, InMemoryOrganisationReposito
 builder.Services.AddScoped<IMembershipRepository, InMemoryMembershipRepository>();
 builder.Services.AddScoped<ITodoRepository, InMemoryTodoRepository>();
 builder.Services.AddScoped<IAuditRepository, InMemoryAuditRepository>();
+builder.Services.AddScoped<ISessionRepository, InMemorySessionRepository>();
 
 // Auth handlers
 builder.Services.AddScoped<RegisterHandler>();
 builder.Services.AddScoped<LoginHandler>();
 builder.Services.AddScoped<LogoutHandler>();
+
+// Onboarding handlers
+builder.Services.AddScoped<CompleteOnboardingHandler>();
 
 // Todo handlers
 builder.Services.AddScoped<CreateTodoHandler>();
@@ -75,6 +82,9 @@ builder.Services.AddScoped<CreateOrgHandler>();
 builder.Services.AddScoped<AddMemberHandler>();
 builder.Services.AddScoped<RemoveMemberHandler>();
 builder.Services.AddScoped<ChangeRoleHandler>();
+builder.Services.AddScoped<ListUserOrgsHandler>();
+builder.Services.AddScoped<SetActiveOrgHandler>();
+
 
 // Audit handlers
 builder.Services.AddScoped<ListAuditHandler>();
@@ -120,6 +130,7 @@ app.UseCors();
 
 // Custom middleware
 app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseMiddleware<AuthenticationMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapControllers();

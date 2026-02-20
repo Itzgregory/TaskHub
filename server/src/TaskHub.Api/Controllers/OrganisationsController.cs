@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using TaskHub.Application.UseCases.Organisations.AddMember;
 using TaskHub.Application.UseCases.Organisations.ChangeRole;
 using TaskHub.Application.UseCases.Organisations.Create;
+using TaskHub.Application.UseCases.Organisations.ListUserOrgs;
 using TaskHub.Application.UseCases.Organisations.RemoveMember;
+using TaskHub.Application.UseCases.Organisations.SetActiveOrg;
 
 namespace TaskHub.Api.Controllers;
 
@@ -12,17 +14,23 @@ public class OrganisationsController : BaseApiController
     private readonly AddMemberHandler _addMemberHandler;
     private readonly RemoveMemberHandler _removeMemberHandler;
     private readonly ChangeRoleHandler _changeRoleHandler;
+    private readonly ListUserOrgsHandler _listUserOrgsHandler;
+    private readonly SetActiveOrgHandler _setActiveOrgHandler;
 
     public OrganisationsController(
         CreateOrgHandler createHandler,
         AddMemberHandler addMemberHandler,
         RemoveMemberHandler removeMemberHandler,
-        ChangeRoleHandler changeRoleHandler)
+        ChangeRoleHandler changeRoleHandler,
+        ListUserOrgsHandler listUserOrgsHandler,
+        SetActiveOrgHandler setActiveOrgHandler)
     {
         _createHandler = createHandler;
         _addMemberHandler = addMemberHandler;
         _removeMemberHandler = removeMemberHandler;
         _changeRoleHandler = changeRoleHandler;
+        _listUserOrgsHandler = listUserOrgsHandler;
+        _setActiveOrgHandler = setActiveOrgHandler;
     }
 
     [HttpPost]
@@ -34,6 +42,28 @@ public class OrganisationsController : BaseApiController
             return BadRequest(result);
 
         return Created(result.Value);
+    }
+
+    [HttpGet("me")]
+    public async Task<IActionResult> ListMyOrganisations()
+    {
+        var result = await _listUserOrgsHandler.HandleAsync(new ListUserOrgsQuery());
+
+        if (!result.IsSuccess)
+            return BadRequest(result);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("set-active")]
+    public async Task<IActionResult> SetActiveOrg([FromBody] SetActiveOrgCommand command)
+    {
+        var result = await _setActiveOrgHandler.HandleAsync(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(result);
+
+        return NoContent();
     }
 
     [HttpPost("{orgId}/members")]

@@ -40,8 +40,17 @@ public class AuthController : BaseApiController
         if (!result.IsSuccess)
             return BadRequest(result);
 
-        // TODO: Set session cookie with user info
-        // For now just return success
+        // Set session cookie
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true, // HTTPS only in production
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddHours(24)
+        };
+
+        Response.Cookies.Append("session_token", result.Value!.SessionToken, cookieOptions);
+
         return Ok(result.Value);
     }
 
@@ -50,7 +59,9 @@ public class AuthController : BaseApiController
     {
         await _logoutHandler.HandleAsync(new LogoutCommand());
 
-        // TODO: Clear session cookie
+        // Clear session cookie
+        Response.Cookies.Delete("session_token");
+
         return NoContent();
     }
 }

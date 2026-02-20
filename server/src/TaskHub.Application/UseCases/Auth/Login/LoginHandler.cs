@@ -9,6 +9,7 @@ namespace TaskHub.Application.UseCases.Auth.Login;
 public class LoginHandler
 {
     private readonly IUserRepository _userRepository;
+    private readonly ISessionRepository _sessionRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IDateTimeProvider _dateTimeProvider;
     private readonly IAuditRepository _auditRepository;
@@ -16,12 +17,14 @@ public class LoginHandler
 
     public LoginHandler(
         IUserRepository userRepository,
+        ISessionRepository sessionRepository,
         IPasswordHasher passwordHasher,
         IDateTimeProvider dateTimeProvider,
         IAuditRepository auditRepository,
         ICorrelationContext correlationContext)
     {
         _userRepository = userRepository;
+        _sessionRepository = sessionRepository;
         _passwordHasher = passwordHasher;
         _dateTimeProvider = dateTimeProvider;
         _auditRepository = auditRepository;
@@ -89,6 +92,13 @@ public class LoginHandler
         user.ResetLoginAttempts(_dateTimeProvider.UtcNow);
         await _userRepository.UpdateAsync(user, cancellationToken);
 
+        // Delete any existing sessions for this user (single session per user)
+        await _sessionRepository.DeleteByUserIdAsync(user.Id, cancellationToken);
+
+        // Create new session
+        var session = Session.Create(user.Id, _dateTimeProvider.UtcNow, expiryHours: 24);
+        await _sessionRepository.AddAsync(session, cancellationToken);
+
         // Log successful login (user isn't authenticated yet, so create audit entry manually)
         var successAudit = AuditEntry.Create(
             user.Id,
@@ -103,6 +113,8 @@ public class LoginHandler
 
         return Result<LoginResponse>.Success(new LoginResponse(
             user.Id,
-            user.Username));
+            user.Username,
+            session.SessionToken,
+            user.OnboardingCompleted));
     }
 }

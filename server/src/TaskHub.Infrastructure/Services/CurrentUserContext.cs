@@ -18,10 +18,8 @@ public class CurrentUserContext : ICurrentUserContext
     {
         get
         {
-            var userIdClaim = _httpContextAccessor.HttpContext?.User
-                .FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+            var userId = _httpContextAccessor.HttpContext?.Items["UserId"] as Guid?;
+            return userId ?? Guid.Empty;
         }
     }
 
@@ -29,10 +27,8 @@ public class CurrentUserContext : ICurrentUserContext
     {
         get
         {
-            var orgIdClaim = _httpContextAccessor.HttpContext?.User
-                .FindFirst("ActiveOrgId")?.Value;
-
-            return Guid.TryParse(orgIdClaim, out var orgId) ? orgId : Guid.Empty;
+            var orgId = _httpContextAccessor.HttpContext?.Items["ActiveOrgId"] as Guid?;
+            return orgId ?? Guid.Empty;
         }
     }
 
@@ -40,15 +36,21 @@ public class CurrentUserContext : ICurrentUserContext
     {
         get
         {
-            var roleClaim = _httpContextAccessor.HttpContext?.User
-                .FindFirst(ClaimTypes.Role)?.Value;
-
-            return Enum.TryParse<UserRole>(roleClaim, out var role) ? role : UserRole.Member;
+            // Role is determined by membership in active org
+            // This would require a repository call, so for now return Member
+            // The handlers check membership explicitly
+            return UserRole.Member;
         }
     }
 
-    public bool IsAuthenticated =>
-        _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
+    public bool IsAuthenticated
+    {
+        get
+        {
+            var isAuth = _httpContextAccessor.HttpContext?.Items["IsAuthenticated"] as bool?;
+            return isAuth ?? false;
+        }
+    }
 
     public bool IsOrgAdmin => Role == UserRole.OrgAdmin;
 }

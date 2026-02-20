@@ -5,30 +5,42 @@ namespace TaskHub.Application.UseCases.Auth.Register;
 
 public static class RegisterValidator
 {
-    public static RegisterCommand SanitizeAndValidate(RegisterCommand command)
+    public static void Validate(RegisterCommand command)
     {
         var errors = new Dictionary<string, string[]>();
 
-        // Validate and normalize email
-        var normalizedEmail = EmailValidator.ValidateAndNormalizeEmail(
-            command.Username, errors, "email");
-
-        // Validate password with security checks
-        if (!PasswordValidator.ValidatePassword(command.Password, errors, "password"))
+        // Validate username
+        if (string.IsNullOrWhiteSpace(command.Username))
         {
-            // Additional SQL injection check on password
-            if (SecuritySanitizer.ContainsSqlInjection(command.Password))
+            errors["username"] = new[] { "Username is required." };
+        }
+        else
+        {
+            var sanitizedUsername = SecuritySanitizer.SanitizeInput(command.Username);
+            
+            if (sanitizedUsername.Length < 3 || sanitizedUsername.Length > 50)
             {
-                errors["password"] = new[] { "Password contains invalid characters." };
+                errors["username"] = new[] { "Username must be between 3 and 50 characters." };
             }
+            else if (SecuritySanitizer.ContainsSqlInjection(sanitizedUsername))
+            {
+                errors["username"] = new[] { "Username contains invalid characters." };
+            }
+        }
+
+        // Validate password using PasswordValidator
+        if (!string.IsNullOrWhiteSpace(command.Password))
+        {
+            PasswordValidator.ValidatePassword(command.Password, errors, "password");
+        }
+        else
+        {
+            errors["password"] = new[] { "Password is required." };
         }
 
         if (errors.Any())
         {
             throw new ValidationException(errors);
         }
-
-        // Return sanitized command
-        return new RegisterCommand(normalizedEmail, command.Password);
     }
 }
