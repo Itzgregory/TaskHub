@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays, CheckCircle2, ChevronDown, ChevronRight,
   Inbox, LayoutGrid, Plus, Sun, Moon,
-  User, Settings, Circle, Building2,
+  User, Settings, Circle, Building2, Users, FolderKanban, Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,14 +16,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { useStore, actions } from "../../../lib/store";
-import type { Project } from "../../../lib/types";
+import { useStore, actions } from "@/lib/store";
 
-const NAV_ITEMS = [
+// Personal workspace navigation
+const PERSONAL_NAV_ITEMS = [
   { label: "Today", icon: Sun, path: "/dashboard/today" },
   { label: "Upcoming", icon: CalendarDays, path: "/dashboard/upcoming" },
   { label: "All Tasks", icon: Inbox, path: "/dashboard/task" },
   { label: "Completed", icon: CheckCircle2, path: "/dashboard/completed" },
+];
+
+// Organisation navigation (prefixed with org path)
+const ORG_NAV_ITEMS = [
+  { label: "Dashboard", icon: Building2, path: "/dashboard/org/home" },
+  { label: "Members", icon: Users, path: "/dashboard/org/members" },
+  { label: "Projects", icon: FolderKanban, path: "/dashboard/org/projects" },
+  { label: "Activity", icon: Activity, path: "/dashboard/org/activity" },
 ];
 
 const PROJECT_COLORS = [
@@ -48,11 +56,14 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
   const { state, dispatch, getProjectTaskCount } = useStore();
   const location = useLocation();
   const [projectsOpen, setProjectsOpen] = useState(true);
+  const navigate = useNavigate();
   const [addingProject, setAddingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
-  
   // In real app, this would come from context
   const [activeOrg, setActiveOrg] = useState(MOCK_ORGS[0]);
+
+  // Determine if we're in organisation mode
+  const isOrgMode = activeOrg.id !== null;
 
   const handleAddProject = () => {
     if (!newProjectName.trim()) return;
@@ -71,11 +82,12 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
   // Helper to check if a path is active
   const isActive = (path: string) => location.pathname === path;
 
-  const PROJECT_ROUTE = "/dashboard/projects/$projectId";
-
-  // Get initials for avatar
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  // Check if a project is active based on mode
+  const isProjectActive = (projectId: string) => {
+    if (isOrgMode) {
+      return location.pathname === `/dashboard/org/projects/${projectId}`;
+    }
+    return location.pathname === `/dashboard/projects/${projectId}`;
   };
 
   return (
@@ -88,10 +100,9 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
         className="flex items-center gap-2 px-3 py-4"
         style={{ borderBottom: "1px solid var(--c-borPri)" }}
       >
-        <Button
-          variant="ghost"
+        <button
           onClick={onToggle}
-          className="flex items-center gap-2 p-0 h-auto hover:bg-transparent"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           aria-label="Toggle sidebar"
         >
           <div
@@ -106,94 +117,159 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
               style={{ color: "var(--c-texPri)" }}
             >
               TaskHub
+              {isOrgMode && (
+                <span className="text-xs ml-2" style={{ color: "var(--c-texSec)" }}>
+                  • {activeOrg.name}
+                </span>
+              )}
             </span>
           )}
-        </Button>
+        </button>
       </div>
 
       {/* New Task Button */}
       <div className="px-2 py-3">
-        <Button
+        <button
           onClick={onNewTask}
-          className={`flex items-center gap-2 w-full ${
-            collapsed ? "justify-center px-2" : "justify-start"
-          }`}
-          style={{ backgroundColor: "var(--c-bluTexAccPri)" }}
+          className={`flex items-center gap-2 w-full rounded-lg px-3 py-2 text-sm font-medium transition-opacity hover:opacity-90 ${collapsed ? "justify-center" : ""}`}
+          style={{ backgroundColor: "var(--c-bluTexAccPri)", color: "var(--c-bacPri)" }}
         >
           <Plus className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span>New Task</span>}
-        </Button>
+        </button>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 space-y-0.5">
-        {NAV_ITEMS.map(({ label, icon: Icon, path }) => {
-          const active = isActive(path);
-          return (
-            <Link
-              key={path}
-              to={path}
-              className={`nav-item ${active ? "active" : ""} ${
-                collapsed ? "justify-center" : ""
-              }`}
-              title={collapsed ? label : undefined}
-              activeProps={{ className: "active" }}
-            >
-              <Icon className="w-4 h-4 flex-shrink-0" />
-              {!collapsed && <span>{label}</span>}
-            </Link>
-          );
-        })}
+        {/* Personal Navigation - always visible */}
+        <div className="space-y-0.5">
+          {PERSONAL_NAV_ITEMS.map(({ label, icon: Icon, path }) => {
+            const active = isActive(path);
+            return (
+              <Link
+                key={path}
+                to={path}
+                className={`nav-item ${active ? "active" : ""} ${collapsed ? "justify-center" : ""}`}
+                title={collapsed ? label : undefined}
+                activeProps={{ className: "active" }}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {!collapsed && <span>{label}</span>}
+              </Link>
+            );
+          })}
+        </div>
 
-        {/* Projects Section */}
+        {/* Organisation Navigation - only shown in org mode */}
+        {isOrgMode && (
+          <div className="pt-3">
+            {!collapsed && (
+              <div
+                className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wider"
+                style={{ color: "var(--c-texTer)" }}
+              >
+                Organisation
+              </div>
+            )}
+            <div className="space-y-0.5 mt-0.5">
+              {ORG_NAV_ITEMS.map(({ label, icon: Icon, path }) => {
+                const active = isActive(path);
+                return (
+                  <Link
+                    key={path}
+                    to={path}
+                    className={`nav-item ${active ? "active" : ""} ${collapsed ? "justify-center" : ""}`}
+                    title={collapsed ? label : undefined}
+                    activeProps={{ className: "active" }}
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    {!collapsed && <span>{label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Projects Section - always visible but paths change based on mode */}
         <div className="pt-3">
           {!collapsed && (
-            <Button
-              variant="ghost"
+            <button
               onClick={() => setProjectsOpen(!projectsOpen)}
-              className="flex items-center gap-1 w-full justify-start px-3 py-1.5 h-auto text-xs font-semibold uppercase tracking-wider"
+              className="flex items-center gap-1 w-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors"
               style={{ color: "var(--c-texTer)" }}
             >
               {projectsOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
               <span>Projects</span>
-            </Button>
+            </button>
           )}
 
           {(projectsOpen || collapsed) && (
             <div className="space-y-0.5 mt-0.5">
-              {state.projects.map((project: Project) => {  
+              {state.projects.map((project) => {
                 const count = getProjectTaskCount(project.id);
-                const active = isActive(`/projects/${project.id}`);
-                return (
-                  <Link
-                    key={project.id}
-                    to={PROJECT_ROUTE}
-                    params={{ projectId: project.id }}
-                    className={`nav-item ${active ? "active" : ""} ${
-                      collapsed ? "justify-center" : ""
-                    }`}
-                    title={collapsed ? project.name : undefined}
-                    activeProps={{ className: "active" }}
-                  >
-                    <Circle
-                      className="w-3 h-3 flex-shrink-0"
-                      style={{ color: project.color, fill: project.color }}
-                    />
-                    {!collapsed && (
-                      <>
-                        <span className="flex-1 truncate">{project.name}</span>
-                        {count > 0 && (
-                          <span
-                            className="text-xs font-mono"
-                            style={{ color: "var(--c-texTer)" }}
-                          >
-                            {count}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </Link>
-                );
+                const active = isProjectActive(project.id);
+                
+                // Conditionally render the Link based on mode
+                if (isOrgMode) {
+                  return (
+                    <Link
+                      key={project.id}
+                      to="/dashboard/org/projects/$projectId"
+                      params={{ projectId: project.id }}
+                      className={`nav-item ${active ? "active" : ""} ${collapsed ? "justify-center" : ""}`}
+                      title={collapsed ? project.name : undefined}
+                      activeProps={{ className: "active" }}
+                    >
+                      <Circle
+                        className="w-3 h-3 flex-shrink-0"
+                        style={{ color: project.color, fill: project.color }}
+                      />
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1 truncate">{project.name}</span>
+                          {count > 0 && (
+                            <span
+                              className="text-xs font-mono"
+                              style={{ color: "var(--c-texTer)" }}
+                            >
+                              {count}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </Link>
+                  );
+                } else {
+                  return (
+                    <Link
+                      key={project.id}
+                      to="/dashboard/projects/$projectId"
+                      params={{ projectId: project.id }}
+                      className={`nav-item ${active ? "active" : ""} ${collapsed ? "justify-center" : ""}`}
+                      title={collapsed ? project.name : undefined}
+                      activeProps={{ className: "active" }}
+                    >
+                      <Circle
+                        className="w-3 h-3 flex-shrink-0"
+                        style={{ color: project.color, fill: project.color }}
+                      />
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1 truncate">{project.name}</span>
+                          {count > 0 && (
+                            <span
+                              className="text-xs font-mono"
+                              style={{ color: "var(--c-texTer)" }}
+                            >
+                              {count}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </Link>
+                  );
+                }
               })}
 
               {/* Add project */}
@@ -211,28 +287,18 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
                           if (e.key === "Enter") handleAddProject();
                           if (e.key === "Escape") setAddingProject(false);
                         }}
-                        onBlur={() => { 
-                          if (!newProjectName.trim()) setAddingProject(false); 
-                        }}
+                        onBlur={() => { if (!newProjectName.trim()) setAddingProject(false); }}
                         className="th-input text-sm py-1 w-full"
-                        style={{
-                          backgroundColor: "var(--c-bacTer)",
-                          border: "1px solid var(--c-borPri)",
-                          borderRadius: "6px",
-                          padding: "4px 8px",
-                          color: "var(--c-texPri)",
-                        }}
                       />
                     </div>
                   ) : (
-                    <Button
-                      variant="ghost"
+                    <button
                       onClick={() => setAddingProject(true)}
-                      className="nav-item w-full justify-start opacity-60 hover:opacity-100"
+                      className="nav-item w-full opacity-60 hover:opacity-100"
                     >
                       <Plus className="w-3 h-3" />
                       <span className="text-xs">Add Project</span>
-                    </Button>
+                    </button>
                   )}
                 </div>
               )}
@@ -242,7 +308,7 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
       </nav>
 
       {/* Bottom section with Org switcher and user actions */}
-      {!collapsed && (
+      {!collapsed ? (
         <div
           className="px-2 py-3 space-y-2"
           style={{ borderTop: "1px solid var(--c-borPri)" }}
@@ -250,12 +316,10 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
           {/* Organisation switcher with avatar */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full flex items-center justify-between px-2 py-2 h-auto"
+              <button
+                className="w-full flex items-center justify-between px-2 py-2 rounded-lg transition-colors hover:opacity-80"
                 style={{
                   backgroundColor: "var(--c-bacTer)",
-                  borderRadius: "8px",
                 }}
               >
                 <div className="flex items-center gap-2 min-w-0">
@@ -270,12 +334,12 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
                       {activeOrg.initials}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-medium truncate">
+                  <span className="text-sm font-medium truncate" style={{ color: "var(--c-texPri)" }}>
                     {activeOrg.name}
                   </span>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--c-icoSec)" }} />
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="start"
@@ -341,29 +405,65 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
 
           {/* User actions row */}
           <div className="flex items-center justify-around pt-1">
-            <Button variant="ghost" size="icon" className="w-8 h-8">
-              <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-            </Button>
-            <Button variant="ghost" size="icon" className="w-8 h-8">
-              <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-            </Button>
-            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={toggleTheme}>
+            {isOrgMode ? (
+              <Link
+                to="/dashboard/profile"
+                className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/org/profile") ? "active" : ""}`}
+                title="Profile"
+                activeProps={{ className: "active" }}
+              >
+                <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+              </Link>
+            ) : (
+              <Link
+                to="/dashboard/profile"
+                className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/profile") ? "active" : ""}`}
+                title="Profile"
+                activeProps={{ className: "active" }}
+              >
+                <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+              </Link>
+            )}
+            
+            {isOrgMode ? (
+              <Link
+                to="/dashboard/settings"  
+                className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/org/settings") ? "active" : ""}`}
+                title="Settings"
+                activeProps={{ className: "active" }}
+              >
+                <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+              </Link>
+            ) : (
+              <Link
+                to="/dashboard/settings"
+                className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/settings") ? "active" : ""}`}
+                title="Settings"
+                activeProps={{ className: "active" }}
+              >
+                <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+              </Link>
+            )}
+            
+            <button
+              onClick={toggleTheme}
+              className="nav-item w-8 h-8 p-0 justify-center"
+              title={state.theme === "light" ? "Dark mode" : "Light mode"}
+            >
               {state.theme === "light" 
                 ? <Moon className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
                 : <Sun className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
               }
-            </Button>
+            </button>
           </div>
         </div>
-      )}
-
-      {/* Collapsed view - just icons */}
-      {collapsed && (
+      ) : (
+        /* Collapsed view - just icons */
         <div
           className="px-2 py-3 space-y-2"
           style={{ borderTop: "1px solid var(--c-borPri)" }}
         >
-          <Button variant="ghost" size="icon" className="w-full h-8">
+          <button className="nav-item w-full justify-center p-0 h-8">
             <Avatar className="w-5 h-5">
               <AvatarFallback 
                 className="text-[8px]"
@@ -372,19 +472,58 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
                 {activeOrg.initials}
               </AvatarFallback>
             </Avatar>
-          </Button>
-          <Button variant="ghost" size="icon" className="w-full h-8">
-            <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-          </Button>
-          <Button variant="ghost" size="icon" className="w-full h-8">
-            <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-          </Button>
-          <Button variant="ghost" size="icon" className="w-full h-8" onClick={toggleTheme}>
+          </button>
+          
+          {isOrgMode ? (
+            <Link
+              to="/dashboard/profile"
+              className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/org/profile") ? "active" : ""}`}
+              title="Profile"
+              activeProps={{ className: "active" }}
+            >
+              <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+            </Link>
+          ) : (
+            <Link
+              to="/dashboard/profile"
+              className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/profile") ? "active" : ""}`}
+              title="Profile"
+              activeProps={{ className: "active" }}
+            >
+              <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+            </Link>
+          )}
+          
+          {isOrgMode ? (
+            <Link
+              to="/dashboard/settings"
+              className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/org/settings") ? "active" : ""}`}
+              title="Settings"
+              activeProps={{ className: "active" }}
+            >
+              <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+            </Link>
+          ) : (
+            <Link
+              to="/dashboard/settings"
+              className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/settings") ? "active" : ""}`}
+              title="Settings"
+              activeProps={{ className: "active" }}
+            >
+              <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+            </Link>
+          )}
+          
+          <button
+            onClick={toggleTheme}
+            className="nav-item w-full justify-center p-0 h-8"
+            title={state.theme === "light" ? "Dark mode" : "Light mode"}
+          >
             {state.theme === "light" 
               ? <Moon className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
               : <Sun className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
             }
-          </Button>
+          </button>
         </div>
       )}
     </aside>

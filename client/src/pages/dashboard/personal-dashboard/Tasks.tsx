@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Plus, SlidersHorizontal } from "lucide-react";
-import { AppLayout } from "../../components/layout/dashboard/AppLayout";
-import { TaskList } from "../../components/features/TaskList";
-import { TaskFormModal } from "../../components/features/TaskFormModal";
-import { useStore } from "../../lib/store";
-import type { Priority } from "../../lib/types";
+import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
+import { TaskList } from "../../../components/features/TaskList";
+import { TaskFormModal } from "../../../components/features/TaskFormModal";
+import { useStore } from "../../../lib/store";
+import type { Priority } from "../../../lib/types";
 
 type FilterStatus = "all" | "todo" | "in_progress" | "done";
 type SortBy = "order" | "dueDate" | "priority";

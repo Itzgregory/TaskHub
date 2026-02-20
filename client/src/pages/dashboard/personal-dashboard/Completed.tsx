@@ -1,10 +1,10 @@
 
 import { CheckCircle2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { AppLayout } from "../../components/layout/dashboard/AppLayout";
-import { TaskItem } from "../../components/features/TaskItem";
-import { useStore, actions } from "../../lib/store";
-import type { Task } from "../../lib/types";
+import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
+import { TaskItem } from "../../../components/features/TaskItem";
+import { useStore, actions } from "../../../lib/store";
+import type { Task } from "../../../lib/types";
 
 function groupByCompletedDate(tasks: Task[]): Record<string, Task[]> {
   return tasks.reduce((acc, task) => {

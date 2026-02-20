@@ -1,14 +1,22 @@
 import { useState } from "react";
-import { Search, X, PanelLeft } from "lucide-react";
+import { Search, X, PanelLeft, Menu } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
   onSidebarToggle: () => void;
+  isMobile?: boolean;
+  mobileMenuOpen?: boolean;
 }
 
-export function Header({ title, subtitle, onSidebarToggle }: HeaderProps) {
+export function Header({ 
+  title, 
+  subtitle, 
+  onSidebarToggle,
+  isMobile,
+  mobileMenuOpen 
+}: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
@@ -27,21 +35,29 @@ export function Header({ title, subtitle, onSidebarToggle }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-10 flex items-center gap-3 px-6 py-4"
+      className="sticky top-0 z-30 flex items-center gap-3 px-4 sm:px-6 py-4"
       style={{
         borderBottom: "1px solid var(--c-borPri)",
         backgroundColor: "var(--c-bacPri)",
       }}
     >
-      {/* Sidebar toggle (mobile) */}
+      {/* Sidebar toggle - different icons for mobile/desktop */}
       <button
         onClick={onSidebarToggle}
-        className="p-1.5 rounded-lg transition-colors md:hidden"
+        className="p-1.5 rounded-lg transition-colors"
         style={{ color: "var(--c-texSec)" }}
         onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-bacTer)")}
         onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
+        aria-label={isMobile 
+          ? (mobileMenuOpen ? "Close menu" : "Open menu") 
+          : "Toggle sidebar"
+        }
       >
-        <PanelLeft className="w-4 h-4" />
+        {isMobile ? (
+          <Menu className="w-5 h-5" />
+        ) : (
+          <PanelLeft className="w-4 h-4" />
+        )}
       </button>
 
       {/* Title */}
@@ -59,7 +75,7 @@ export function Header({ title, subtitle, onSidebarToggle }: HeaderProps) {
         )}
       </div>
 
-      {/* Search */}
+      {/* Search - unchanged */}
       <div className="flex items-center gap-2">
         {searchOpen ? (
           <form onSubmit={handleSearch} className="flex items-center">
@@ -78,7 +94,7 @@ export function Header({ title, subtitle, onSidebarToggle }: HeaderProps) {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => e.key === "Escape" && setSearchOpen(false)}
-                className="bg-transparent text-sm outline-none w-48"
+                className="bg-transparent text-sm outline-none w-32 sm:w-48"
                 style={{ color: "var(--c-texPri)" }}
               />
               <button

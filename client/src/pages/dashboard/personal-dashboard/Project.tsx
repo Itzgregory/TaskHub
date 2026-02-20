@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
 import { Plus, Pencil, Trash2, Circle } from "lucide-react";
-import { AppLayout } from "../../components/layout/dashboard/AppLayout";
-import { TaskList } from "../../components/features/TaskList";
-import { TaskFormModal } from "../../components/features/TaskFormModal";
-import { useStore, actions } from "../../lib/store";
+import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
+import { TaskList } from "../../../components/features/TaskList";
+import { TaskFormModal } from "../../../components/features/TaskFormModal";
+import { useStore, actions } from "../../../lib/store";
 
 const PROJECT_COLORS = [
   "#6366f1", "#f59e0b", "#10b981", "#3b82f6",

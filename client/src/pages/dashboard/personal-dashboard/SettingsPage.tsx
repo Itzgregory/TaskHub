@@ -1,6 +1,6 @@
-import { AppLayout } from "../../components/layout/dashboard/AppLayout";
-import { useStore, actions } from "../../lib/store";
-import { useTheme } from "../../lib/theme-provider";
+import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
+import { useStore, actions } from "../../../lib/store";
+import { useTheme } from "../../../lib/theme-provider";
 import { Sun, Moon, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { CalendarDays, Plus } from "lucide-react";
 import { format } from "date-fns";
-import { AppLayout } from "../../components/layout/dashboard/AppLayout";
-import { TaskItem } from "../../components/features/TaskItem";
-import { TaskFormModal } from "../../components/features/TaskFormModal";
-import { useStore } from "../../lib/store";
-import type { Task } from "../../lib/types";
+import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
+import { TaskItem } from "../../../components/features/TaskItem";
+import { TaskFormModal } from "../../../components/features/TaskFormModal";
+import { useStore } from "../../../lib/store";
+import type { Task } from "../../../lib/types";
 
 function groupByDate(tasks: Task[]): Record<string, Task[]> {
   return tasks.reduce((acc, task) => {

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { Sun, Plus } from "lucide-react";
-import { AppLayout } from "../../components/layout/dashboard/AppLayout";
-import { TaskList } from "../../components/features/TaskList";
-import { TaskFormModal } from "../../components/features/TaskFormModal";
-import { useStore } from "../../lib/store";
+import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
+import { TaskList } from "../../../components/features/TaskList";
+import { TaskFormModal } from "../../../components/features/TaskFormModal";
+import { useStore } from "../../../lib/store";
 
 export default function TodayPage() {
   const { getTodayTasks } = useStore();
