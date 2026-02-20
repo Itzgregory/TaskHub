@@ -1,7 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Calendar, Flag, Folder } from "lucide-react";
 import type { Priority, Task } from "../../lib/types";
-import { actions, useStore } from "../../lib/store";
+import { useStore } from "../../lib/store";
+import { useCreateTodo, useUpdateTodo } from "@/lib/api/hooks";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { mapTaskToCreateRequest, mapTaskToUpdateRequest } from "@/lib/api/mappers";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
   { value: "urgent", label: "🔴 Urgent" },
@@ -14,13 +20,20 @@ const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
 interface TaskFormModalProps {
   task?: Task;
   defaultProjectId?: string;
+  defaultOrgId?: string;
   defaultDueDate?: string;
   onClose: () => void;
 }
 
-export function TaskFormModal({ task, defaultProjectId, defaultDueDate, onClose }: TaskFormModalProps) {
-  const { state, dispatch } = useStore();
+export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDueDate, onClose }: TaskFormModalProps) {
+  const { state } = useStore();
+  const { activeOrg } = useAuth();
+  const { toast } = useToast();
+  const createMutation = useCreateTodo();
+  const updateMutation = useUpdateTodo();
+
   const isEditing = !!task;
+  const orgId = defaultOrgId || activeOrg?.orgId;
 
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
@@ -29,26 +42,58 @@ export function TaskFormModal({ task, defaultProjectId, defaultDueDate, onClose 
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? "");
   const [tags, setTags] = useState(task?.tags.join(", ") ?? "");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || !orgId) return;
 
-    const taskData = {
-      title: title.trim(),
-      description: description.trim() || undefined,
-      priority,
-      projectId: projectId || undefined,
-      dueDate: dueDate || undefined,
-      tags: tags.split(",").map(t => t.trim()).filter(Boolean),
-      status: task?.status ?? ("todo" as const),
-    };
+    const tagArray = tags.split(",").map(t => t.trim()).filter(Boolean);
 
-    if (isEditing) {
-      dispatch(actions.updateTask(task.id, taskData));
-    } else {
-      dispatch(actions.addTask(taskData));
+    try {
+      if (isEditing && task) {
+        const version = task.version;
+        const updateData = mapTaskToUpdateRequest(
+          {
+            ...task,
+            title: title.trim(),
+            description: description.trim() || undefined,
+            priority,
+            projectId: projectId || undefined,
+            dueDate: dueDate || undefined,
+            tags: tagArray,
+          },
+          version
+        );
+        await updateMutation.mutateAsync({ id: task.id, data: updateData });
+        toast({
+          title: "Task updated",
+          description: "Your task has been updated successfully.",
+        });
+      } else {
+        const createData = mapTaskToCreateRequest(
+          {
+            title: title.trim(),
+            description: description.trim() || undefined,
+            priority,
+            projectId: projectId || undefined,
+            dueDate: dueDate || undefined,
+            tags: tagArray,
+          },
+          orgId
+        );
+        await createMutation.mutateAsync(createData);
+        toast({
+          title: "Task created",
+          description: "Your new task has been created successfully.",
+        });
+      }
+      onClose();
+    } catch (err) {
+      toast({
+        title: isEditing ? "Update failed" : "Create failed",
+        description: err instanceof Error ? err.message : "An error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
-    onClose();
   };
 
   return (
@@ -62,27 +107,27 @@ export function TaskFormModal({ task, defaultProjectId, defaultDueDate, onClose 
           <h2 className="text-sm font-semibold" style={{ color: "var(--c-texPri)" }}>
             {isEditing ? "Edit Task" : "New Task"}
           </h2>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="p-1 rounded-md transition-colors"
+            className="h-7 w-7"
             style={{ color: "var(--c-texTer)" }}
-            onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-bacTer)")}
-            onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           {/* Title */}
-          <input
+          <Input
             autoFocus
             type="text"
             placeholder="Task title..."
             value={title}
             onChange={e => setTitle(e.target.value)}
-            className="w-full text-base font-medium bg-transparent outline-none border-0"
+            className="text-base font-medium border-0 bg-transparent shadow-none focus-visible:ring-0"
             style={{ color: "var(--c-texPri)" }}
           />
 
@@ -138,11 +183,11 @@ export function TaskFormModal({ task, defaultProjectId, defaultDueDate, onClose 
 
             {/* Due Date */}
             <div className="relative">
-              <input
+              <Input
                 type="date"
                 value={dueDate}
                 onChange={e => setDueDate(e.target.value)}
-                className="th-select pl-7"
+                className="th-select pl-7 h-auto py-1.5 border-0 shadow-none focus-visible:ring-0"
                 style={{ paddingLeft: "28px" }}
               />
               <Calendar
@@ -152,41 +197,36 @@ export function TaskFormModal({ task, defaultProjectId, defaultDueDate, onClose 
             </div>
 
             {/* Tags */}
-            <input
+            <Input
               type="text"
               placeholder="Tags (comma separated)"
               value={tags}
               onChange={e => setTags(e.target.value)}
-              className="th-select"
+              className="th-select h-auto py-1.5 border-0 shadow-none focus-visible:ring-0"
             />
           </div>
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-1">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
               style={{ color: "var(--c-texSec)" }}
-              onMouseOver={e => {
-                e.currentTarget.style.color = "var(--c-texPri)";
-                e.currentTarget.style.backgroundColor = "var(--c-bacTer)";
-              }}
-              onMouseOut={e => {
-                e.currentTarget.style.color = "var(--c-texSec)";
-                e.currentTarget.style.backgroundColor = "";
-              }}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
-              disabled={!title.trim()}
-              className="px-4 py-2 text-sm font-medium rounded-lg transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={!title.trim() || !orgId || createMutation.isPending || updateMutation.isPending}
               style={{ backgroundColor: "var(--c-bluTexAccPri)", color: "var(--c-bacPri)" }}
             >
-              {isEditing ? "Save Changes" : "Create Task"}
-            </button>
+              {createMutation.isPending || updateMutation.isPending
+                ? "Saving..."
+                : isEditing
+                  ? "Save Changes"
+                  : "Create Task"}
+            </Button>
           </div>
         </form>
       </div>

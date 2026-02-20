@@ -6,8 +6,16 @@ import { TooltipProvider } from "../components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StoreProvider } from "../lib/store";
 import { ThemeProvider } from "../lib/theme-provider";
+import { AuthProvider } from "../lib/auth/AuthContext";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -16,16 +24,18 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
-      <StoreProvider>
-        <ThemeProvider defaultTheme="light" storageKey="taskhub-theme"> {/* Add ThemeProvider */}
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Outlet />
-            {import.meta.env.MODE === "development" && <TanStackRouterDevtools />}
-          </TooltipProvider>
-        </ThemeProvider>
-      </StoreProvider>
+      <AuthProvider>
+        <StoreProvider>
+          <ThemeProvider defaultTheme="light" storageKey="taskhub-theme">
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <Outlet />
+              {import.meta.env.MODE === "development" && <TanStackRouterDevtools />}
+            </TooltipProvider>
+          </ThemeProvider>
+        </StoreProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

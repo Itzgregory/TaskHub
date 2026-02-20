@@ -1,6 +1,6 @@
 namespace TaskHub.Application.UseCases.Auth.Login;
 
 public record LoginCommand(
-    string Username,
+    string Email,
     string Password
 );

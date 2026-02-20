@@ -82,10 +82,24 @@ public class FileUserRepository : IUserRepository
         return users.FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
     }
 
+    public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var normalized = email.ToLowerInvariant().Trim();
+        var users = await LoadAllAsync(cancellationToken);
+        return users.FirstOrDefault(u => u.Email != null && u.Email.Value.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+    }
+
     public async Task<bool> ExistsAsync(string username, CancellationToken cancellationToken = default)
     {
         var users = await LoadAllAsync(cancellationToken);
         return users.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var normalized = email.ToLowerInvariant().Trim();
+        var users = await LoadAllAsync(cancellationToken);
+        return users.Any(u => u.Email != null && u.Email.Value.Equals(normalized, StringComparison.OrdinalIgnoreCase));
     }
 
     private async Task<IReadOnlyList<User>> LoadAllAsync(CancellationToken cancellationToken)

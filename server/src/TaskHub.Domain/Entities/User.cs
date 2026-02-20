@@ -27,10 +27,11 @@ public class User : AuditableEntity
 
     private User() { } // For serialization
 
-    private User(string username, string passwordHash, DateTime createdAt)
+    private User(string email, string passwordHash, DateTime createdAt)
     {
         Id = Guid.NewGuid();
-        Username = username;
+        Username = email; // Placeholder until onboarding; used for display
+        Email = new Email(email);
         PasswordHash = passwordHash;
         IsLockedOut = false;
         FailedLoginAttempts = 0;
@@ -39,16 +40,16 @@ public class User : AuditableEntity
         SetCreated(createdAt);
     }
 
-    public static User Create(string username, string passwordHash, DateTime createdAt)
+    public static User Create(string email, string passwordHash, DateTime createdAt)
     {
-        if (string.IsNullOrWhiteSpace(username))
-            throw new ValidationException("username", "Username is required.");
+        if (string.IsNullOrWhiteSpace(email))
+            throw new ValidationException("email", "Email is required.");
 
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new ArgumentException("Password hash cannot be empty.", nameof(passwordHash));
 
-        var normalizedUsername = username.ToLowerInvariant().Trim();
-        return new User(normalizedUsername, passwordHash, createdAt);
+        var normalizedEmail = email.ToLowerInvariant().Trim();
+        return new User(normalizedEmail, passwordHash, createdAt);
     }
 
     public void RecordFailedLogin(DateTime now)
@@ -96,7 +97,7 @@ public class User : AuditableEntity
 
     public void CompleteOnboarding(
         string fullName,
-        Email email,
+        string username,
         string? avatarUrl,
         UsageType usageType,
         string theme,
@@ -112,11 +113,17 @@ public class User : AuditableEntity
         if (fullName.Length < 2 || fullName.Length > 100)
             throw new ValidationException("fullName", "Full name must be between 2 and 100 characters.");
 
+        if (string.IsNullOrWhiteSpace(username))
+            throw new ValidationException("username", "Username is required.");
+
+        if (username.Length < 3 || username.Length > 50)
+            throw new ValidationException("username", "Username must be between 3 and 50 characters.");
+
         if (theme != "light" && theme != "dark")
             throw new ValidationException("theme", "Theme must be 'light' or 'dark'.");
 
         FullName = fullName.Trim();
-        Email = email;
+        Username = username.ToLowerInvariant().Trim();
         AvatarUrl = avatarUrl;
         UsageType = usageType;
         Theme = theme;

@@ -1,16 +1,18 @@
 import { AppLayout } from "@/components/layout/dashboard/AppLayout";
 import { Link, useParams } from "@tanstack/react-router";
 import {
-  ArrowLeft, CheckCircle2, MessageSquare, Plus, UserPlus,
-  ArrowRight, FileText, Clock, FolderKanban, User,
+  ArrowLeft, CheckCircle2, Clock, FolderKanban, User,
   ThumbsUp, MoreHorizontal,
 } from "lucide-react";
+import { ACTIVITY_TYPE_ICON, ACTIVITY_TYPE_COLOR, type ActivityType } from "@/lib/utils/org-constants";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface ActivityEvent {
   id: string; user: string; avatar: string; avatarColor: string;
   action: string; target: string; project: string; projectColor: string;
   time: string; fullTime: string;
-  type: "complete" | "comment" | "create" | "assign" | "move" | "upload";
+  type: ActivityType;
   description: string;
   comments: { user: string; avatar: string; color: string; text: string; time: string }[];
   relatedTasks: { title: string; status: "todo" | "in_progress" | "done" }[];
@@ -52,23 +54,7 @@ const EVENTS: Record<string, ActivityEvent> = {
 
 const fallbackEvent = EVENTS["1"];
 
-const TYPE_ICON = {
-  complete: CheckCircle2,
-  comment: MessageSquare,
-  create: Plus,
-  assign: UserPlus,
-  move: ArrowRight,
-  upload: FileText,
-};
 
-const TYPE_COLOR = {
-  complete: "var(--c-greTexAccPri)",
-  comment: "var(--c-bluTexAccPri)",
-  create: "var(--c-yelTexAccPri)",
-  assign: "var(--c-oraTexAccPri)",
-  move: "var(--c-texTer)",
-  upload: "var(--c-bluTexAccPri)",
-};
 
 const STATUS_ICON_MAP: Record<string, { icon: typeof CheckCircle2; color: string }> = {
   todo: { icon: Clock, color: "var(--c-texDis)" },
@@ -79,7 +65,7 @@ const STATUS_ICON_MAP: Record<string, { icon: typeof CheckCircle2; color: string
 export default function ActivityDetail() {
   const { activityId } = useParams({ from: "/dashboard/org/activity/$activityId" });
   const event = EVENTS[activityId || ""] || fallbackEvent;
-  const TypeIcon = TYPE_ICON[event.type];
+  const TypeIcon = ACTIVITY_TYPE_ICON[event.type];
 
   return (
     <AppLayout title="Activity Detail" subtitle={event.target}>
@@ -102,7 +88,7 @@ export default function ActivityDetail() {
             </div>
             <div className="flex flex-wrap items-center gap-3 text-xs" style={{ color: "var(--c-texTer)" }}>
               <span className="flex items-center gap-1">
-                <TypeIcon className="w-3 h-3" style={{ color: TYPE_COLOR[event.type] }} />
+                <TypeIcon className="w-3 h-3" style={{ color: ACTIVITY_TYPE_COLOR[event.type] }} />
                 {event.type.replace("_", " ")}
               </span>
               <span className="flex items-center gap-1">
@@ -112,7 +98,7 @@ export default function ActivityDetail() {
               <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{event.fullTime}</span>
             </div>
           </div>
-          <button className="p-2 rounded-lg hover:bg-[var(--c-bacTer)]"><MoreHorizontal className="w-4 h-4" style={{ color: "var(--c-texTer)" }} /></button>
+          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" style={{ color: "var(--c-texTer)" }} /></Button>
         </div>
       </div>
 
@@ -141,17 +127,20 @@ export default function ActivityDetail() {
                     </div>
                     <p className="text-sm" style={{ color: "var(--c-texSec)" }}>{c.text}</p>
                   </div>
-                  <button className="p-1 rounded hover:bg-[var(--c-bacTer)]">
+                  <Button variant="ghost" size="icon" className="h-7 w-7">
                     <ThumbsUp className="w-3 h-3" style={{ color: "var(--c-texDis)" }} />
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
             {/* Reply input */}
             <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--c-borPri)" }}>
               <div className="flex items-center gap-2">
-                <input type="text" placeholder="Write a comment..." className="th-input text-sm flex-1" />
-                <button className="px-3 py-2 rounded-lg text-xs font-medium" style={{ backgroundColor: "var(--c-bluTexAccPri)", color: "var(--c-bacPri)" }}>Reply</button>
+                <Input type="text" placeholder="Write a comment..." className="text-sm flex-1" />
+                <Button
+                  style={{ backgroundColor: "var(--c-bluTexAccPri)", color: "var(--c-bacPri)" }}
+                  size="sm"
+                >Reply</Button>
               </div>
             </div>
           </div>

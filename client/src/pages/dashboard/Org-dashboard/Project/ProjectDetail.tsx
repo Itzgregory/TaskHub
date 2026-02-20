@@ -1,9 +1,12 @@
 import { AppLayout } from "@/components/layout/dashboard/AppLayout";
+import { ProgressBar } from "@/components/features/ProgressBar";
+import { Button } from "@/components/ui/button";
 import { Link, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft, Users, CheckCircle2, Clock, Circle, MoreHorizontal,
   Plus, Calendar, Target, MessageSquare, Paperclip, AlertCircle,
 } from "lucide-react";
+import { STATUS_STYLE } from "@/lib/utils/org-constants";
 
 interface ProjectTask {
   id: string;
@@ -60,11 +63,7 @@ const PROJECTS_DATA: Record<string, {
 // Fallback for unknown IDs — reuse project 1 data with tweaked name
 const fallbackProject = PROJECTS_DATA["1"];
 
-const STATUS_BADGE: Record<string, { bg: string; color: string; label: string }> = {
-  active: { bg: "var(--c-greBacSec)", color: "var(--c-greTexAccPri)", label: "Active" },
-  "on-hold": { bg: "var(--c-yelBacSec)", color: "var(--c-yelTexAccPri)", label: "On Hold" },
-  completed: { bg: "var(--c-bluBacSec)", color: "var(--c-bluTexAccPri)", label: "Completed" },
-};
+
 
 const PRIORITY_COLOR: Record<string, string> = {
   urgent: "var(--c-redTexAccPri)",
@@ -83,7 +82,7 @@ export default function ProjectDetail() {
   const { projectId } = useParams({ from: "/dashboard/org/projects/$projectId" });
   const project = PROJECTS_DATA[projectId || ""] || fallbackProject;
   const progress = Math.round((project.completedTasks / project.totalTasks) * 100);
-  const sts = STATUS_BADGE[project.status];
+  const sts = STATUS_STYLE[project.status];
 
   return (
     <AppLayout title={project.name} subtitle="Project details">
@@ -104,7 +103,7 @@ export default function ProjectDetail() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-medium px-2.5 py-1 rounded-full" style={{ backgroundColor: sts.bg, color: sts.color }}>{sts.label}</span>
-            <button className="p-1.5 rounded-lg hover:bg-[var(--c-bacTer)]"><MoreHorizontal className="w-4 h-4" style={{ color: "var(--c-texTer)" }} /></button>
+            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" style={{ color: "var(--c-texTer)" }} /></Button>
           </div>
         </div>
         <p className="text-sm mb-5" style={{ color: "var(--c-texSec)" }}>{project.description}</p>
@@ -116,7 +115,7 @@ export default function ProjectDetail() {
             <span className="text-xs font-mono" style={{ color: "var(--c-texSec)" }}>{project.completedTasks}/{project.totalTasks} tasks · {progress}%</span>
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--c-bacTer)" }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, backgroundColor: project.color }} />
+            <ProgressBar value={progress} color={project.color} heightClass="h-2" />
           </div>
         </div>
 
@@ -143,9 +142,9 @@ export default function ProjectDetail() {
         <div className="lg:col-span-3 rounded-xl p-5" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold" style={{ color: "var(--c-texPri)" }}>Tasks</h3>
-            <button className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg" style={{ backgroundColor: "var(--c-bluBacSec)", color: "var(--c-bluTexAccPri)" }}>
+            <Button size="sm" style={{ backgroundColor: "var(--c-bluBacSec)", color: "var(--c-bluTexAccPri)" }}>
               <Plus className="w-3 h-3" /> Add Task
-            </button>
+            </Button>
           </div>
           <div className="space-y-1">
             {project.tasks.map(t => {
@@ -184,8 +183,8 @@ export default function ProjectDetail() {
                   <span className="text-[10px]" style={{ color: ms.progress === 100 ? "var(--c-greTexAccPri)" : "var(--c-texDis)" }}>{ms.dueDate}</span>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--c-bacSec)" }}>
-                    <div className="h-full rounded-full" style={{ width: `${ms.progress}%`, backgroundColor: ms.progress === 100 ? "var(--c-greTexAccPri)" : project.color }} />
+                  <div className="flex-1">
+                    <ProgressBar value={ms.progress} color={ms.progress === 100 ? "var(--c-greTexAccPri)" : project.color} />
                   </div>
                   <span className="text-[10px] font-mono" style={{ color: "var(--c-texTer)" }}>{ms.progress}%</span>
                 </div>
@@ -195,6 +194,6 @@ export default function ProjectDetail() {
           </div>
         </div>
       </div>
-    </AppLayout>
+    </AppLayout >
   );
 }

@@ -1,10 +1,13 @@
 import {
   ArrowLeft, Mail, Calendar, Clock, CheckCircle2,
   FolderKanban, BarChart3, MessageSquare, MoreHorizontal,
-  Crown, ShieldCheck, UserCircle, Shield, TrendingUp,
+  TrendingUp,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/dashboard/AppLayout";
+import { ProgressBar } from "@/components/features/ProgressBar";
+import { Button } from "@/components/ui/button";
 import { Link, useParams } from "@tanstack/react-router";
+import { ROLE_META } from "@/lib/utils/org-constants";
 
 interface MemberData {
   id: string; name: string; email: string; avatar: string; color: string;
@@ -68,12 +71,7 @@ const MEMBERS_DATA: Record<string, MemberData> = {
 
 const fallbackMember = MEMBERS_DATA["1"];
 
-const ROLE_META = {
-  owner: { icon: Crown, label: "Owner", color: "var(--c-yelTexAccPri)" },
-  admin: { icon: ShieldCheck, label: "Admin", color: "var(--c-bluTexAccPri)" },
-  member: { icon: UserCircle, label: "Member", color: "var(--c-greTexAccPri)" },
-  viewer: { icon: Shield, label: "Viewer", color: "var(--c-texTer)" },
-};
+
 
 export default function MemberDetail() {
   const { memberId } = useParams({ from: "/dashboard/org/members/$memberId" });
@@ -110,7 +108,7 @@ export default function MemberDetail() {
             </div>
             <span className="inline-block text-xs px-2 py-0.5 rounded-full mt-2" style={{ backgroundColor: "var(--c-bacTer)", color: "var(--c-texSec)" }}>{member.department}</span>
           </div>
-          <button className="p-2 rounded-lg hover:bg-[var(--c-bacTer)] self-start"><MoreHorizontal className="w-4 h-4" style={{ color: "var(--c-texTer)" }} /></button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 self-start"><MoreHorizontal className="w-4 h-4" style={{ color: "var(--c-texTer)" }} /></Button>
         </div>
       </div>
 
@@ -141,9 +139,7 @@ export default function MemberDetail() {
                     <span className="text-xs" style={{ color: "var(--c-texTer)" }}>{b.label}</span>
                     <span className="text-xs font-mono" style={{ color: "var(--c-texSec)" }}>{b.count}</span>
                   </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--c-bacTer)" }}>
-                    <div className="h-full rounded-full" style={{ width: `${totalTasks ? (b.count / totalTasks) * 100 : 0}%`, backgroundColor: b.color }} />
-                  </div>
+                  <ProgressBar value={totalTasks ? (b.count / totalTasks) * 100 : 0} color={b.color} />
                 </div>
               ))}
             </div>

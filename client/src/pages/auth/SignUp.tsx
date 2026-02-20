@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignupBrand } from "@/components/auth/signup/SignupBrand";
 import { MobileLogo } from "@/components/auth/MobileLogo";
@@ -6,17 +7,55 @@ import { SignupForm } from "@/components/auth/signup/SignupForm";
 import { Divider } from "@/components/auth/Divider";
 import { GoogleButton } from "@/components/auth/login/GoogleButton";
 import { TermsNotice } from "@/components/auth/signup/TermsNotice";
-
+import { useRegister } from "@/lib/api/hooks";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SignupPage() {
-  const handleSignup = (name: string, email: string, password: string) => {
-    console.log("Signup attempt:", { name, email, password });
-    // Handle signup logic here
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
+  const { toast } = useToast();
+  const registerMutation = useRegister();
+
+  const handleSignup = async (email: string, password: string) => {
+    setError(null);
+    try {
+      const response = await registerMutation.mutateAsync({
+        email,
+        password,
+      });
+
+      // Set user in auth context (onboarding not completed yet)
+      setUser({
+        userId: response.userId,
+        email: response.email,
+        onboardingCompleted: false,
+      });
+
+      // Navigate to onboarding
+      navigate({ to: "/auth/onboarding" });
+
+      toast({
+        title: "Account created!",
+        description: "Please complete your profile setup.",
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to create account. Please try again.";
+      setError(errorMessage);
+      toast({
+        title: "Sign up failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleGoogleSignup = () => {
-    console.log("Google signup");
-    // Handle Google signup
+    toast({
+      title: "Coming soon",
+      description: "Google sign-up is not yet available.",
+    });
   };
 
   return (
@@ -40,7 +79,21 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-0 space-y-4">
-            <SignupForm onSubmit={handleSignup} />
+            {error && (
+              <div
+                className="p-3 rounded-lg text-sm"
+                style={{
+                  backgroundColor: "var(--c-redBacSec)",
+                  color: "var(--c-redTexAccPri)",
+                }}
+              >
+                {error}
+              </div>
+            )}
+            <SignupForm
+              onSubmit={handleSignup}
+              isLoading={registerMutation.isPending}
+            />
             <Divider />
             <GoogleButton onClick={handleGoogleSignup} />
           </CardContent>

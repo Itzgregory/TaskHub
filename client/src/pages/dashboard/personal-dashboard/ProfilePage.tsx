@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { User, Save } from "lucide-react";
 import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
+import { StatCard } from "../../../components/features/StatCard";
 import { useStore, actions } from "../../../lib/store";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function ProfilePage() {
   const { state, dispatch } = useStore();
@@ -40,28 +44,9 @@ export default function ProfilePage() {
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: "Total Tasks", value: totalTasks },
-            { label: "Completed", value: completedTasks },
-            { label: "Projects", value: state.projects.length },
-          ].map(({ label, value }) => (
-            <div
-              key={label}
-              className="p-4 rounded-xl text-center"
-              style={{
-                border: "1px solid var(--c-borPri)",
-                backgroundColor: "var(--c-bacSec)",
-              }}
-            >
-              <div
-                className="text-2xl font-semibold font-mono"
-                style={{ color: "var(--c-texPri)" }}
-              >
-                {value}
-              </div>
-              <div className="text-xs mt-0.5" style={{ color: "var(--c-texTer)" }}>{label}</div>
-            </div>
-          ))}
+          <StatCard label="Total Tasks" value={totalTasks} />
+          <StatCard label="Completed" value={completedTasks} />
+          <StatCard label="Projects" value={state.projects.length} />
         </div>
 
         {/* Edit form */}
@@ -71,8 +56,8 @@ export default function ProfilePage() {
           </h3>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium" style={{ color: "var(--c-texSec)" }}>Name</label>
-            <input
+            <Label className="text-xs" style={{ color: "var(--c-texSec)" }}>Name</Label>
+            <Input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
@@ -81,8 +66,8 @@ export default function ProfilePage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-medium" style={{ color: "var(--c-texSec)" }}>Email</label>
-            <input
+            <Label className="text-xs" style={{ color: "var(--c-texSec)" }}>Email</Label>
+            <Input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -90,14 +75,14 @@ export default function ProfilePage() {
             />
           </div>
 
-          <button
+          <Button
             type="submit"
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-opacity hover:opacity-90"
+            className="flex items-center gap-2"
             style={{ backgroundColor: "var(--c-bluTexAccPri)", color: "var(--c-bacPri)" }}
           >
             <Save className="w-3.5 h-3.5" />
             {saved ? "Saved!" : "Save Changes"}
-          </button>
+          </Button>
         </form>
       </div>
     </AppLayout>

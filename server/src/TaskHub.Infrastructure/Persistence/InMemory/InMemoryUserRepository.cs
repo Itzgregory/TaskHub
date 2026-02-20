@@ -59,10 +59,28 @@ public class InMemoryUserRepository : IUserRepository
         return Task.FromResult(user);
     }
 
+    public Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var normalized = email.ToLowerInvariant().Trim();
+        var user = _database.Users.Values
+            .FirstOrDefault(u => u.Email != null && u.Email.Value.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+
+        return Task.FromResult(user);
+    }
+
     public Task<bool> ExistsAsync(string username, CancellationToken cancellationToken = default)
     {
         var exists = _database.Users.Values
             .Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+
+        return Task.FromResult(exists);
+    }
+
+    public Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        var normalized = email.ToLowerInvariant().Trim();
+        var exists = _database.Users.Values
+            .Any(u => u.Email != null && u.Email.Value.Equals(normalized, StringComparison.OrdinalIgnoreCase));
 
         return Task.FromResult(exists);
     }

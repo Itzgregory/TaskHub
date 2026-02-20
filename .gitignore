@@ -7,6 +7,10 @@
 
 .env
 
+API_INTEGRATION.md
+.editorconfig
+
+
 # testing
 /coverage
 

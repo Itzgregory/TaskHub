@@ -20,21 +20,18 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   // Check if mobile on mount and when window resizes
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setMobileMenuOpen(false);
+      }
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  // Close mobile menu when window resizes to desktop
-  useEffect(() => {
-    if (!isMobile) {
-      setMobileMenuOpen(false);
-    }
-  }, [isMobile]);
 
   const handleSidebarToggle = () => {
     if (isMobile) {
@@ -58,8 +55,8 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
           fixed md:static top-0 left-0 z-50 h-full
           transition-transform duration-300 ease-in-out
           ${isMobile ? (
-            mobileMenuOpen 
-              ? 'translate-x-0' 
+            mobileMenuOpen
+              ? 'translate-x-0'
               : '-translate-x-full'
           ) : ''}
         `}

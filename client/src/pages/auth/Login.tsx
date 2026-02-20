@@ -1,20 +1,63 @@
-import { Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { LoginBrand } from "@/components/auth/login/LoginBrand";
 import { LoginForm } from "@/components/auth/login/LoginForm";
 import { GoogleButton } from "@/components/auth/login/GoogleButton";
 import { Divider } from "@/components/auth/Divider";
 import { MobileLogo } from "@/components/auth/MobileLogo";
-
+import { useLogin } from "@/lib/api/hooks";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
-  const handleLogin = (email: string, password: string) => {
-    console.log("Login attempt:", { email, password });
-    // Handle login logic here
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
+  const { toast } = useToast();
+  const loginMutation = useLogin();
+
+  const handleLogin = async (email: string, password: string) => {
+    setError(null);
+    try {
+      const response = await loginMutation.mutateAsync({
+        email,
+        password,
+      });
+
+      // Set user in auth context
+      setUser({
+        userId: response.userId,
+        email: response.email,
+        onboardingCompleted: response.onboardingCompleted,
+      });
+
+      // Navigate based on onboarding status
+      if (response.onboardingCompleted) {
+        navigate({ to: "/dashboard/today" });
+      } else {
+        navigate({ to: "/auth/onboarding" });
+      }
+
+      toast({
+        title: "Welcome back!",
+        description: `Signed in as ${response.email}`,
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to sign in. Please check your credentials.";
+      setError(errorMessage);
+      toast({
+        title: "Sign in failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleGoogleLogin = () => {
-    console.log("Google login");
-    // Handle Google login
+    toast({
+      title: "Coming soon",
+      description: "Google sign-in is not yet available.",
+    });
   };
 
   return (
@@ -39,7 +82,21 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <LoginForm onSubmit={handleLogin} />
+          {error && (
+            <div
+              className="p-3 rounded-lg text-sm"
+              style={{
+                backgroundColor: "var(--c-redBacSec)",
+                color: "var(--c-redTexAccPri)",
+              }}
+            >
+              {error}
+            </div>
+          )}
+          <LoginForm
+            onSubmit={handleLogin}
+            isLoading={loginMutation.isPending}
+          />
           <Divider />
           <GoogleButton onClick={handleGoogleLogin} />
 

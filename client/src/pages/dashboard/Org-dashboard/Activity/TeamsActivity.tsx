@@ -1,9 +1,7 @@
 import { AppLayout } from "@/components/layout/dashboard/AppLayout";
 import { Link } from "@tanstack/react-router";
-import {
-  Activity, CheckCircle2, MessageSquare, Plus, UserPlus,
-  GitBranch, FileText, ArrowRight, Filter,
-} from "lucide-react";
+import { Activity } from "lucide-react";
+import { ACTIVITY_TYPE_ICON, ACTIVITY_TYPE_COLOR, type ActivityType } from "@/lib/utils/org-constants";
 
 interface ActivityItem {
   id: string;
@@ -14,7 +12,7 @@ interface ActivityItem {
   target: string;
   project: string;
   time: string;
-  type: "complete" | "comment" | "create" | "assign" | "move" | "upload";
+  type: ActivityType;
 }
 
 const ACTIVITY: ActivityItem[] = [
@@ -31,24 +29,6 @@ const ACTIVITY: ActivityItem[] = [
   { id: "11", user: "Jordan Lee", avatar: "JL", avatarColor: "#ec4899", action: "completed", target: "Penetration test report", project: "Security Audit", time: "Yesterday", type: "complete" },
   { id: "12", user: "Riley Anderson", avatar: "RA", avatarColor: "#ef4444", action: "assigned", target: "Performance benchmarks to QA", project: "API Infrastructure", time: "2 days ago", type: "assign" },
 ];
-
-const TYPE_ICON = {
-  complete: CheckCircle2,
-  comment: MessageSquare,
-  create: Plus,
-  assign: UserPlus,
-  move: ArrowRight,
-  upload: FileText,
-};
-
-const TYPE_COLOR = {
-  complete: "var(--c-greTexAccPri)",
-  comment: "var(--c-bluTexAccPri)",
-  create: "var(--c-yelTexAccPri)",
-  assign: "var(--c-oraTexAccPri)",
-  move: "var(--c-texTer)",
-  upload: "var(--c-bluTexAccPri)",
-};
 
 export default function TeamActivity() {
   // Group by rough time groups
@@ -68,7 +48,7 @@ export default function TeamActivity() {
         </h3>
         <div className="space-y-1">
           {items.map(a => {
-            const Icon = TYPE_ICON[a.type];
+            const Icon = ACTIVITY_TYPE_ICON[a.type];
             return (
               <Link
                 to='/dashboard/org/activity/$activityId'
@@ -105,7 +85,7 @@ export default function TeamActivity() {
                 </div>
 
                 {/* Type icon */}
-                <Icon className="w-4 h-4 flex-shrink-0 mt-1" style={{ color: TYPE_COLOR[a.type] }} />
+                <Icon className="w-4 h-4 flex-shrink-0 mt-1" style={{ color: ACTIVITY_TYPE_COLOR[a.type] }} />
               </Link>
             );
           })}

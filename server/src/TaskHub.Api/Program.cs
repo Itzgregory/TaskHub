@@ -12,6 +12,7 @@ using TaskHub.Application.UseCases.Organisations.AddMember;
 using TaskHub.Application.UseCases.Organisations.ChangeRole;
 using TaskHub.Application.UseCases.Organisations.Create;
 using TaskHub.Application.UseCases.Organisations.ListUserOrgs;    
+using TaskHub.Application.UseCases.Organisations.ListMembers;
 using TaskHub.Application.UseCases.Organisations.RemoveMember;
 using TaskHub.Application.UseCases.Organisations.SetActiveOrg;    
 using TaskHub.Application.UseCases.Todos.Archive;
@@ -84,6 +85,7 @@ builder.Services.AddScoped<RemoveMemberHandler>();
 builder.Services.AddScoped<ChangeRoleHandler>();
 builder.Services.AddScoped<ListUserOrgsHandler>();
 builder.Services.AddScoped<SetActiveOrgHandler>();
+builder.Services.AddScoped<ListMembersHandler>();
 
 
 // Audit handlers

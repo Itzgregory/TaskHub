@@ -6,63 +6,14 @@ import type { Task, Project, UserProfile, Theme, AppState, Priority, TaskStatus 
 const generateId = () => Math.random().toString(36).slice(2, 11);
 const now = () => new Date().toISOString();
 
-// ---- INITIAL DATA ----
-const defaultProjects: Project[] = [
-  { id: "p1", name: "Personal", color: "#6366f1", description: "Personal tasks", createdAt: now() },
-  { id: "p2", name: "Work", color: "#f59e0b", description: "Work related tasks", createdAt: now() },
-  { id: "p3", name: "Learning", color: "#10b981", description: "Study and learning goals", createdAt: now() },
-];
+// ---- INITIAL DATA (no seeded tasks/projects; backend is source of truth) ----
+const defaultProjects: Project[] = [];
 
-const today = new Date().toISOString().slice(0, 10);
-const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-
-const defaultTasks: Task[] = [
-  {
-    id: "t1", title: "Review quarterly report", description: "Go through Q4 numbers and prepare summary",
-    status: "todo", priority: "urgent", projectId: "p2", dueDate: today,
-    tags: ["report", "q4"], createdAt: now(), updatedAt: now(), order: 0,
-  },
-  {
-    id: "t2", title: "Team standup at 10am", description: "Daily sync with the engineering team",
-    status: "done", priority: "medium", projectId: "p2", dueDate: today,
-    tags: ["meeting"], createdAt: now(), updatedAt: now(), completedAt: now(), order: 1,
-  },
-  {
-    id: "t3", title: "Buy groceries", description: "Milk, eggs, bread, veggies",
-    status: "todo", priority: "low", projectId: "p1", dueDate: today,
-    tags: ["errands"], createdAt: now(), updatedAt: now(), order: 2,
-  },
-  {
-    id: "t4", title: "Read \"Atomic Habits\" chapter 5", description: "",
-    status: "in_progress", priority: "medium", projectId: "p3", dueDate: tomorrow,
-    tags: ["reading", "habits"], createdAt: now(), updatedAt: now(), order: 3,
-  },
-  {
-    id: "t5", title: "Prepare presentation slides", description: "Keynote for product demo",
-    status: "todo", priority: "high", projectId: "p2", dueDate: tomorrow,
-    tags: ["presentation"], createdAt: now(), updatedAt: now(), order: 4,
-  },
-  {
-    id: "t6", title: "Set up home office desk", description: "Cable management + new monitor stand",
-    status: "todo", priority: "low", projectId: "p1", dueDate: nextWeek,
-    tags: [], createdAt: now(), updatedAt: now(), order: 5,
-  },
-  {
-    id: "t7", title: "Complete TypeScript course", description: "Finish advanced generics module",
-    status: "todo", priority: "medium", projectId: "p3", dueDate: nextWeek,
-    tags: ["typescript", "coding"], createdAt: now(), updatedAt: now(), order: 6,
-  },
-  {
-    id: "t8", title: "Schedule dentist appointment", description: "",
-    status: "todo", priority: "none", projectId: "p1", dueDate: undefined,
-    tags: ["health"], createdAt: now(), updatedAt: now(), order: 7,
-  },
-];
+const defaultTasks: Task[] = [];
 
 const defaultProfile: UserProfile = {
-  name: "Alex Johnson",
-  email: "alex@taskhub.app",
+  name: "",
+  email: "",
 };
 
 // ---- ACTIONS ----

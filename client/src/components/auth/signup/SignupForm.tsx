@@ -1,60 +1,36 @@
 import { useState } from "react";
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { User, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordStrength } from "./PasswordStrength";
 
 interface SignupFormProps {
-  onSubmit?: (name: string, email: string, password: string) => void;
+  onSubmit?: (email: string, password: string) => void;
+  isLoading?: boolean;
 }
 
-export function SignupForm({ onSubmit }: SignupFormProps) {
+export function SignupForm({ onSubmit, isLoading = false }: SignupFormProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit?.(name, email, password);
+    if (!isLoading) {
+      onSubmit?.(email, password);
+    }
   };
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
-      {/* Full name */}
-      <div className="space-y-1.5">
-        <Label htmlFor="name" style={{ color: "var(--c-texPri)" }}>
-          Full name
-        </Label>
-        <div className="relative">
-          <User
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
-            style={{ color: "var(--c-icoTer)" }}
-          />
-          <Input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Alex Johnson"
-            className="pl-9"
-            style={{
-              backgroundColor: "var(--c-bacSec)",
-              borderColor: "var(--c-borPri)",
-              color: "var(--c-texPri)",
-            }}
-          />
-        </div>
-      </div>
-
       {/* Email */}
       <div className="space-y-1.5">
         <Label htmlFor="email" style={{ color: "var(--c-texPri)" }}>
           Email
         </Label>
         <div className="relative">
-          <Mail
+          <User
             className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
             style={{ color: "var(--c-icoTer)" }}
           />
@@ -65,6 +41,8 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             className="pl-9"
+            disabled={isLoading}
+            required
             style={{
               backgroundColor: "var(--c-bacSec)",
               borderColor: "var(--c-borPri)",
@@ -114,9 +92,10 @@ export function SignupForm({ onSubmit }: SignupFormProps) {
       <Button
         type="submit"
         className="w-full mt-2"
+        disabled={isLoading}
         style={{ backgroundColor: "var(--c-bluBacAccPri)", color: "#fff" }}
       >
-        Create account
+        {isLoading ? "Creating account..." : "Create account"}
       </Button>
     </form>
   );

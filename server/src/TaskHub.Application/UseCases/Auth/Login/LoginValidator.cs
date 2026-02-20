@@ -8,9 +8,9 @@ public static class LoginValidator
     {
         var errors = new Dictionary<string, string[]>();
 
-        if (string.IsNullOrWhiteSpace(command.Username))
+        if (string.IsNullOrWhiteSpace(command.Email))
         {
-            errors["username"] = new[] { "Username is required." };
+            errors["email"] = new[] { "Email is required." };
         }
 
         if (string.IsNullOrWhiteSpace(command.Password))

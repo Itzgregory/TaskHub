@@ -1,6 +1,8 @@
 using TaskHub.Application.Common.Security;
 using TaskHub.Domain.Exceptions;
 
+// ReSharper disable once CheckNamespace
+
 namespace TaskHub.Application.UseCases.Auth.Register;
 
 public static class RegisterValidator
@@ -9,23 +11,14 @@ public static class RegisterValidator
     {
         var errors = new Dictionary<string, string[]>();
 
-        // Validate username
-        if (string.IsNullOrWhiteSpace(command.Username))
+        // Validate email
+        if (!string.IsNullOrWhiteSpace(command.Email))
         {
-            errors["username"] = new[] { "Username is required." };
+            EmailValidator.ValidateAndNormalizeEmail(command.Email, errors, "email");
         }
         else
         {
-            var sanitizedUsername = SecuritySanitizer.SanitizeInput(command.Username);
-            
-            if (sanitizedUsername.Length < 3 || sanitizedUsername.Length > 50)
-            {
-                errors["username"] = new[] { "Username must be between 3 and 50 characters." };
-            }
-            else if (SecuritySanitizer.ContainsSqlInjection(sanitizedUsername))
-            {
-                errors["username"] = new[] { "Username contains invalid characters." };
-            }
+            errors["email"] = new[] { "Email is required." };
         }
 
         // Validate password using PasswordValidator

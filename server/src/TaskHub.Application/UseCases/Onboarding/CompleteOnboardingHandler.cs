@@ -2,7 +2,6 @@ using TaskHub.Application.Common.Interfaces.Persistence;
 using TaskHub.Application.Common.Interfaces.Services;
 using TaskHub.Application.Common.Models;
 using TaskHub.Domain.Exceptions;
-using TaskHub.Domain.ValueObjects;
 
 namespace TaskHub.Application.UseCases.Onboarding.CompleteOnboarding;
 
@@ -39,13 +38,20 @@ public class CompleteOnboardingHandler
             throw new NotFoundException("User", _currentUserContext.UserId);
         }
 
-        // Parse email (validates format)
-        var email = new Email(command.Email);
+        // Check username uniqueness (cannot take another user's username)
+        var existingByUsername = await _userRepository.GetByUsernameAsync(command.Username, cancellationToken);
+        if (existingByUsername != null && existingByUsername.Id != user.Id)
+        {
+            throw new ValidationException(new Dictionary<string, string[]>
+            {
+                ["username"] = new[] { "Username is already taken." }
+            });
+        }
 
-        // Complete onboarding
+        // Complete onboarding (email already set at registration)
         user.CompleteOnboarding(
             command.FullName,
-            email,
+            command.Username,
             command.AvatarUrl,
             command.UsageType,
             command.Theme,
@@ -58,7 +64,7 @@ public class CompleteOnboardingHandler
         return Result<CompleteOnboardingResponse>.Success(new CompleteOnboardingResponse(
             user.Id,
             user.FullName!,
-            user.Email!.Value,
+            user.Username,
             user.OnboardingCompleted));
     }
 }

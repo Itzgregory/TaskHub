@@ -3,64 +3,96 @@ import { format } from "date-fns";
 import { Sun, Plus } from "lucide-react";
 import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
 import { TaskList } from "../../../components/features/TaskList";
+import { AddTaskButton } from "../../../components/features/AddTaskButton";
 import { TaskFormModal } from "../../../components/features/TaskFormModal";
-import { useStore } from "../../../lib/store";
+import { useTodos } from "@/lib/api/hooks";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { mapTodoDtoToTask } from "@/lib/api/mappers";
+import { getTodayStr } from "@/lib/utils/tasks";
 
 export default function TodayPage() {
-  const { getTodayTasks } = useStore();
+  const { activeOrg } = useAuth();
   const [addingTask, setAddingTask] = useState(false);
 
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
-  const tasks = getTodayTasks();
+  // Compute today's date string once — plain const since strings are immutable.
+  const todayStr = getTodayStr();
+  const today = new Date(todayStr); // stable Date for format() below
+
+  // Fetch todos for today
+  const { data: todosData, isLoading } = useTodos({
+    orgId: activeOrg?.orgId || '',
+    page: 1,
+    pageSize: 100,
+    includeArchived: false,
+    includeDeleted: false,
+  });
+
+  const activeOrgId = activeOrg?.orgId;
+
+  // Filter and map todos to tasks — no manual useMemo; let React Compiler optimise.
+  const tasks = todosData?.todos.items
+    ? todosData.todos.items
+      .filter(todo => {
+        if (!todo.dueDate) return false;
+        const dueDateStr = todo.dueDate.split('T')[0];
+        return dueDateStr === todayStr;
+      })
+      .map(todo => mapTodoDtoToTask(todo, activeOrgId))
+      .sort((a, b) => {
+        // Sort by priority weight, then by due date
+        const priorityWeight = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
+        const priorityDiff = priorityWeight[a.priority] - priorityWeight[b.priority];
+        if (priorityDiff !== 0) return priorityDiff;
+        return (a.dueDate || '').localeCompare(b.dueDate || '');
+      })
+    : [];
+
   const doneTasks = tasks.filter(t => t.status === "done");
   const pendingTasks = tasks.filter(t => t.status !== "done");
 
+  const progress = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
+
+  if (!activeOrg) {
+    return (
+      <AppLayout title="Today" subtitle="Please select an organisation">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <p className="text-sm" style={{ color: "var(--c-texTer)" }}>No organisation selected.</p>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout
-      title="Today"
-      subtitle={`${format(today, "EEEE")}, ${format(today, "MMMM d, yyyy")}`}
+      title={format(today, "EEEE, MMMM d")}
+      subtitle={isLoading ? "Loading today's tasks..." : `${pendingTasks.length} pending · ${doneTasks.length} done`}
     >
+      {/* Progress bar */}
       {tasks.length > 0 && (
-        <div className="mb-6 flex items-center gap-3">
-          <div
-            className="flex-1 h-1.5 rounded-full overflow-hidden"
-            style={{ backgroundColor: "var(--c-bacTer)" }}
-          >
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs" style={{ color: "var(--c-texTer)" }}>Today's progress</span>
+            <span className="text-xs font-mono" style={{ color: "var(--c-texSec)" }}>{progress}%</span>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--c-bacTer)" }}>
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{
-                width: `${tasks.length ? (doneTasks.length / tasks.length) * 100 : 0}%`,
-                backgroundColor: "var(--c-greTexAccPri)",
+                width: `${progress}%`,
+                backgroundColor: progress === 100 ? "var(--c-greTexAccPri)" : "var(--c-bluTexAccPri)",
               }}
             />
           </div>
-          <span
-            className="text-xs font-mono flex-shrink-0"
-            style={{ color: "var(--c-texTer)" }}
-          >
-            {doneTasks.length}/{tasks.length}
-          </span>
         </div>
       )}
 
       <TaskList
         tasks={pendingTasks}
-        showProject
-        emptyMessage="All done for today! 🎉"
-        emptyIcon={<Sun className="w-6 h-6" style={{ color: "var(--c-yelTexAccPri)" }} />}
+        emptyMessage="No tasks for today"
+        emptyIcon={<Sun className="w-6 h-6" style={{ color: "var(--c-texDis)" }} />}
       />
 
-      <button
-        onClick={() => setAddingTask(true)}
-        className="flex items-center gap-2 mt-3 px-3 py-2 text-sm rounded-lg transition-colors w-full group"
-        style={{ color: "var(--c-texTer)" }}
-        onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-bacTer)")}
-        onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
-      >
-        <Plus className="w-4 h-4" style={{ color: "var(--c-texDis)" }} />
-        Add task
-      </button>
+      <AddTaskButton onClick={() => setAddingTask(true)} />
 
       {doneTasks.length > 0 && (
         <div className="mt-8">
@@ -70,12 +102,17 @@ export default function TodayPage() {
           >
             Completed ({doneTasks.length})
           </h3>
-          <TaskList tasks={doneTasks} showProject />
+          <div style={{ opacity: 0.6 }}>
+            <TaskList tasks={doneTasks} />
+          </div>
         </div>
       )}
 
       {addingTask && (
-        <TaskFormModal defaultDueDate={todayStr} onClose={() => setAddingTask(false)} />
+        <TaskFormModal
+          defaultDueDate={todayStr}
+          onClose={() => setAddingTask(false)}
+        />
       )}
     </AppLayout>
   );

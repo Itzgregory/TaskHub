@@ -4,7 +4,7 @@ namespace TaskHub.Application.UseCases.Onboarding.CompleteOnboarding;
 
 public record CompleteOnboardingCommand(
     string FullName,
-    string Email,
+    string Username,
     string? AvatarUrl,
     UsageType UsageType,
     string Theme,

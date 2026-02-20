@@ -7,16 +7,19 @@ import { Label } from "@/components/ui/label";
 
 interface LoginFormProps {
   onSubmit?: (email: string, password: string) => void;
+  isLoading?: boolean;
 }
 
-export function LoginForm({ onSubmit }: LoginFormProps) {
+export function LoginForm({ onSubmit, isLoading = false }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit?.(email, password);
+    if (!isLoading) {
+      onSubmit?.(email, password);
+    }
   };
 
   return (
@@ -38,6 +41,8 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             className="pl-9"
+            disabled={isLoading}
+            required
             style={{
               backgroundColor: "var(--c-bacSec)",
               borderColor: "var(--c-borPri)",
@@ -97,12 +102,13 @@ export function LoginForm({ onSubmit }: LoginFormProps) {
       <Button
         type="submit"
         className="w-full mt-2"
+        disabled={isLoading}
         style={{
           backgroundColor: "var(--c-bluBacAccPri)",
           color: "#fff",
         }}
       >
-        Sign in
+        {isLoading ? "Signing in..." : "Sign in"}
       </Button>
     </form>
   );

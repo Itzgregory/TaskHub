@@ -13,6 +13,8 @@ import { TIMEZONES } from "@/lib/constants/onboarding";
 interface ProfileStepProps {
   name?: string;
   onNameChange?: (name: string) => void;
+  username?: string;
+  onUsernameChange?: (username: string) => void;
   timezone?: string;
   onTimezoneChange?: (timezone: string) => void;
   onAvatarChange?: (file: File | null, previewUrl: string | null) => void;
@@ -20,8 +22,10 @@ interface ProfileStepProps {
 }
 
 export function ProfileStep({ 
-  name = "Alex Johnson", 
+  name = "", 
   onNameChange,
+  username = "",
+  onUsernameChange,
   timezone,
   onTimezoneChange,
   onAvatarChange,
@@ -54,14 +58,38 @@ export function ProfileStep({
         {/* Display name */}
         <div className="space-y-1.5">
           <Label htmlFor="display-name" style={{ color: "var(--c-texPri)" }}>
-            Display name
+            Display name *
           </Label>
           <Input
             id="display-name"
             type="text"
-            defaultValue={name}
+            value={name}
             onChange={(e) => onNameChange?.(e.target.value)}
             className="w-full"
+            required
+            style={{
+              backgroundColor: "var(--c-bacSec)",
+              borderColor: "var(--c-borPri)",
+              color: "var(--c-texPri)",
+            }}
+          />
+        </div>
+
+        {/* Username */}
+        <div className="space-y-1.5">
+          <Label htmlFor="username" style={{ color: "var(--c-texPri)" }}>
+            Username *
+          </Label>
+          <Input
+            id="username"
+            type="text"
+            value={username}
+            onChange={(e) => onUsernameChange?.(e.target.value)}
+            placeholder="username"
+            className="w-full"
+            required
+            minLength={3}
+            maxLength={50}
             style={{
               backgroundColor: "var(--c-bacSec)",
               borderColor: "var(--c-borPri)",

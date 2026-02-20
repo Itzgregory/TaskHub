@@ -29,6 +29,16 @@ public class AuthController : BaseApiController
         if (!result.IsSuccess)
             return BadRequest(result);
 
+        // Set session cookie so user is authenticated for onboarding
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddHours(24)
+        };
+        Response.Cookies.Append("session_token", result.Value!.SessionToken, cookieOptions);
+
         return Created(result.Value);
     }
 
@@ -40,12 +50,12 @@ public class AuthController : BaseApiController
         if (!result.IsSuccess)
             return BadRequest(result);
 
-        // Set session cookie
+        // Set session cookie (Secure = false in dev so cookie is sent over HTTP)
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Secure = true, // HTTPS only in production
-            SameSite = SameSiteMode.Strict,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddHours(24)
         };
 

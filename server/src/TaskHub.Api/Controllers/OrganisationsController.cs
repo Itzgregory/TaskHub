@@ -3,6 +3,7 @@ using TaskHub.Application.UseCases.Organisations.AddMember;
 using TaskHub.Application.UseCases.Organisations.ChangeRole;
 using TaskHub.Application.UseCases.Organisations.Create;
 using TaskHub.Application.UseCases.Organisations.ListUserOrgs;
+using TaskHub.Application.UseCases.Organisations.ListMembers;
 using TaskHub.Application.UseCases.Organisations.RemoveMember;
 using TaskHub.Application.UseCases.Organisations.SetActiveOrg;
 
@@ -15,6 +16,7 @@ public class OrganisationsController : BaseApiController
     private readonly RemoveMemberHandler _removeMemberHandler;
     private readonly ChangeRoleHandler _changeRoleHandler;
     private readonly ListUserOrgsHandler _listUserOrgsHandler;
+    private readonly ListMembersHandler _listMembersHandler;
     private readonly SetActiveOrgHandler _setActiveOrgHandler;
 
     public OrganisationsController(
@@ -23,7 +25,8 @@ public class OrganisationsController : BaseApiController
         RemoveMemberHandler removeMemberHandler,
         ChangeRoleHandler changeRoleHandler,
         ListUserOrgsHandler listUserOrgsHandler,
-        SetActiveOrgHandler setActiveOrgHandler)
+        SetActiveOrgHandler setActiveOrgHandler,
+        ListMembersHandler listMembersHandler)
     {
         _createHandler = createHandler;
         _addMemberHandler = addMemberHandler;
@@ -31,6 +34,7 @@ public class OrganisationsController : BaseApiController
         _changeRoleHandler = changeRoleHandler;
         _listUserOrgsHandler = listUserOrgsHandler;
         _setActiveOrgHandler = setActiveOrgHandler;
+        _listMembersHandler = listMembersHandler;
     }
 
     [HttpPost]
@@ -64,6 +68,18 @@ public class OrganisationsController : BaseApiController
             return BadRequest(result);
 
         return NoContent();
+    }
+
+    [HttpGet("{orgId:guid}/members")]
+    public async Task<IActionResult> ListMembers(Guid orgId)
+    {
+        var result = await _listMembersHandler.HandleAsync(
+            new ListMembersQuery(orgId));
+
+        if (!result.IsSuccess)
+            return BadRequest(result);
+
+        return Ok(result.Value);
     }
 
     [HttpPost("{orgId}/members")]

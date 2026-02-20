@@ -15,6 +15,7 @@ export interface Task {
   updatedAt: string;
   completedAt?: string;
   order: number;
+  version: number;
 }
 
 export interface Project {

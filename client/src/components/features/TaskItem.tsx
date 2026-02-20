@@ -2,7 +2,12 @@ import { useState } from "react";
 import { Calendar, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { TaskFormModal } from "./TaskFormModal";
 import type { Priority, Task } from "../../lib/types";
-import { actions, useStore } from "../../lib/store";
+import { useStore } from "../../lib/store";
+import { useToggleTodoStatus, useSoftDeleteTodo } from "@/lib/api/hooks";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { formatRelativeDate, getTodayStr } from "@/lib/utils/tasks";
+import { Button } from "@/components/ui/button";
 
 const PRIORITY_DOT: Record<Priority, string> = {
   urgent: "var(--c-redTexAccPri)",
@@ -13,16 +18,11 @@ const PRIORITY_DOT: Record<Priority, string> = {
 };
 
 function formatDate(dateStr: string): string {
-  const today = new Date().toISOString().slice(0, 10);
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  if (dateStr === today) return "Today";
-  if (dateStr === tomorrow) return "Tomorrow";
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return formatRelativeDate(dateStr, "MMM d");
 }
 
 function isOverdue(dateStr: string): boolean {
-  return dateStr < new Date().toISOString().slice(0, 10);
+  return dateStr < getTodayStr();
 }
 
 interface TaskItemProps {
@@ -31,15 +31,61 @@ interface TaskItemProps {
 }
 
 export function TaskItem({ task, showProject }: TaskItemProps) {
-  const { state, dispatch } = useStore();
+  const { state } = useStore();
+  const { activeOrg } = useAuth();
+  const { toast } = useToast();
+  const toggleMutation = useToggleTodoStatus();
+  const deleteMutation = useSoftDeleteTodo();
+
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isDone = task.status === "done";
   const project = state.projects.find(p => p.id === task.projectId);
 
-  const handleToggle = () => dispatch(actions.toggleTask(task.id));
-  const handleDelete = () => { dispatch(actions.deleteTask(task.id)); setMenuOpen(false); };
+  const handleToggle = async () => {
+    if (!activeOrg?.orgId || toggleMutation.isPending) return;
+
+    try {
+      await toggleMutation.mutateAsync({
+        id: task.id,
+        data: {
+          id: task.id,
+          orgId: activeOrg.orgId,
+          version: task.version,
+        },
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to update task",
+        description: err instanceof Error ? err.message : "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!activeOrg?.orgId) return;
+
+    try {
+      await deleteMutation.mutateAsync({
+        id: task.id,
+        orgId: activeOrg.orgId,
+        version: task.version,
+      });
+      setMenuOpen(false);
+      toast({
+        title: "Task deleted",
+        description: "The task has been deleted successfully.",
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to delete task",
+        description: err instanceof Error ? err.message : "An error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <>
@@ -126,25 +172,25 @@ export function TaskItem({ task, showProject }: TaskItemProps) {
 
         {/* Row actions */}
         <div className="relative flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setEditing(true)}
-            className="p-1 rounded transition-colors"
+            className="h-7 w-7"
             style={{ color: "var(--c-texTer)" }}
-            onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-bacTer)")}
-            onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
             title="Edit"
           >
             <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setMenuOpen(m => !m)}
-            className="p-1 rounded transition-colors"
+            className="h-7 w-7"
             style={{ color: "var(--c-texTer)" }}
-            onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-bacTer)")}
-            onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
-          </button>
+          </Button>
           {menuOpen && (
             <div
               className="absolute right-0 top-7 z-20 rounded-lg py-1 w-36 animate-scale-in"
@@ -154,30 +200,34 @@ export function TaskItem({ task, showProject }: TaskItemProps) {
                 boxShadow: "var(--c-shaMD)",
               }}
             >
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => { setEditing(true); setMenuOpen(false); }}
-                className="w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2"
+                className="w-full justify-start gap-2 h-auto px-3 py-2 rounded-none text-sm font-normal"
                 style={{ color: "var(--c-texSec)" }}
-                onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-bacTer)")}
-                onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
               >
                 <Pencil className="w-3.5 h-3.5" /> Edit
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="ghost"
                 onClick={handleDelete}
-                className="w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2"
+                className="w-full justify-start gap-2 h-auto px-3 py-2 rounded-none text-sm font-normal hover:bg-[var(--c-redBacSec)]"
                 style={{ color: "var(--c-redTexAccPri)" }}
-                onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-redBacSec)")}
-                onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
               >
                 <Trash2 className="w-3.5 h-3.5" /> Delete
-              </button>
+              </Button>
             </div>
           )}
         </div>
       </div>
 
-      {editing && <TaskFormModal task={task} onClose={() => setEditing(false)} />}
+      {editing && (
+        <TaskFormModal
+          task={task}
+          defaultOrgId={activeOrg?.orgId}
+          onClose={() => setEditing(false)}
+        />
+      )}
     </>
   );
 }

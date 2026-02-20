@@ -28,14 +28,22 @@ public static class CompleteOnboardingValidator
             }
         }
 
-        // Validate email using EmailValidator
-        if (!string.IsNullOrWhiteSpace(command.Email))
+        // Validate username
+        if (string.IsNullOrWhiteSpace(command.Username))
         {
-            EmailValidator.ValidateAndNormalizeEmail(command.Email, errors, "email");
+            errors["username"] = new[] { "Username is required." };
         }
         else
         {
-            errors["email"] = new[] { "Email is required." };
+            var sanitized = SecuritySanitizer.SanitizeInput(command.Username);
+            if (sanitized.Length < 3 || sanitized.Length > 50)
+            {
+                errors["username"] = new[] { "Username must be between 3 and 50 characters." };
+            }
+            else if (SecuritySanitizer.ContainsSqlInjection(sanitized))
+            {
+                errors["username"] = new[] { "Username contains invalid characters." };
+            }
         }
 
         // Validate theme

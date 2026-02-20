@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2, Circle } from "lucide-react";
+import { Pencil, Trash2, Circle } from "lucide-react";
 import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
 import { TaskList } from "../../../components/features/TaskList";
+import { AddTaskButton } from "../../../components/features/AddTaskButton";
 import { TaskFormModal } from "../../../components/features/TaskFormModal";
 import { useStore, actions } from "../../../lib/store";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const PROJECT_COLORS = [
   "#6366f1", "#f59e0b", "#10b981", "#3b82f6",
@@ -69,12 +72,12 @@ export default function ProjectPage() {
         <div className="flex-1">
           {editingProject ? (
             <div className="flex items-center gap-2 flex-wrap">
-              <input
+              <Input
                 autoFocus
                 value={editName}
                 onChange={e => setEditName(e.target.value)}
                 onKeyDown={e => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditingProject(false); }}
-                className="text-sm font-semibold bg-transparent outline-none"
+                className="text-sm font-semibold bg-transparent border-0 border-b shadow-none focus-visible:ring-0 rounded-none h-auto p-0"
                 style={{
                   borderBottom: `1px solid var(--c-bluTexAccPri)`,
                   color: "var(--c-texPri)",
@@ -94,13 +97,14 @@ export default function ProjectPage() {
                   />
                 ))}
               </div>
-              <button
+              <Button
+                variant="link"
                 onClick={saveEdit}
-                className="text-xs font-medium"
+                className="h-auto p-0 text-xs"
                 style={{ color: "var(--c-bluTexAccPri)" }}
               >
                 Save
-              </button>
+              </Button>
             </div>
           ) : (
             <h2 className="text-base font-semibold" style={{ color: "var(--c-texPri)" }}>
@@ -112,45 +116,30 @@ export default function ProjectPage() {
           )}
         </div>
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={startEdit}
-            className="p-1.5 rounded transition-colors"
+            className="h-7 w-7"
             style={{ color: "var(--c-texTer)" }}
-            onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-bacTer)")}
-            onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
           >
             <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleDelete}
-            className="p-1.5 rounded transition-colors"
+            className="h-7 w-7 hover:bg-[var(--c-redBacSec)] hover:text-[var(--c-redTexAccPri)]"
             style={{ color: "var(--c-texTer)" }}
-            onMouseOver={e => {
-              e.currentTarget.style.backgroundColor = "var(--c-redBacSec)";
-              e.currentTarget.style.color = "var(--c-redTexAccPri)";
-            }}
-            onMouseOut={e => {
-              e.currentTarget.style.backgroundColor = "";
-              e.currentTarget.style.color = "var(--c-texTer)";
-            }}
           >
             <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          </Button>
         </div>
       </div>
 
       <TaskList tasks={pending} emptyMessage="No pending tasks" />
 
-      <button
-        onClick={() => setAddingTask(true)}
-        className="flex items-center gap-2 mt-3 px-3 py-2 text-sm rounded-lg transition-colors w-full"
-        style={{ color: "var(--c-texTer)" }}
-        onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-bacTer)")}
-        onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
-      >
-        <Plus className="w-4 h-4" style={{ color: "var(--c-texDis)" }} />
-        Add task
-      </button>
+      <AddTaskButton onClick={() => setAddingTask(true)} />
 
       {done.length > 0 && (
         <div className="mt-8">

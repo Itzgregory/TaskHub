@@ -39,8 +39,8 @@ public class LoginHandler
         LoginValidator.Validate(command);
 
         // Get user
-        var user = await _userRepository.GetByUsernameAsync(
-            command.Username,
+        var user = await _userRepository.GetByEmailAsync(
+            command.Email,
             cancellationToken);
 
         // Check if user exists and password matches - use same error for both
@@ -68,7 +68,7 @@ public class LoginHandler
 
             return Result<LoginResponse>.Failure(
                 "invalid_credentials",
-                "Invalid username or password.");
+                "Invalid email or password.");
         }
 
         // Check if account is locked
@@ -113,7 +113,7 @@ public class LoginHandler
 
         return Result<LoginResponse>.Success(new LoginResponse(
             user.Id,
-            user.Username,
+            user.Email!.Value,
             session.SessionToken,
             user.OnboardingCompleted));
     }

@@ -11,6 +11,7 @@ public class RegisterHandler
     private readonly IUserRepository _userRepository;
     private readonly IOrganisationRepository _organisationRepository;
     private readonly IMembershipRepository _membershipRepository;
+    private readonly ISessionRepository _sessionRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IDateTimeProvider _dateTimeProvider;
 
@@ -18,12 +19,14 @@ public class RegisterHandler
         IUserRepository userRepository,
         IOrganisationRepository organisationRepository,
         IMembershipRepository membershipRepository,
+        ISessionRepository sessionRepository,
         IPasswordHasher passwordHasher,
         IDateTimeProvider dateTimeProvider)
     {
         _userRepository = userRepository;
         _organisationRepository = organisationRepository;
         _membershipRepository = membershipRepository;
+        _sessionRepository = sessionRepository;
         _passwordHasher = passwordHasher;
         _dateTimeProvider = dateTimeProvider;
     }
@@ -35,16 +38,16 @@ public class RegisterHandler
         // Validate input
         RegisterValidator.Validate(command);
 
-        // Check username uniqueness
-        var existingUser = await _userRepository.GetByUsernameAsync(
-            command.Username,
+        // Check email uniqueness
+        var existingUser = await _userRepository.GetByEmailAsync(
+            command.Email,
             cancellationToken);
 
         if (existingUser != null)
         {
             return Result<RegisterResponse>.Failure(
-                "username_taken",
-                "Username is already taken.");
+                "email_taken",
+                "Email is already registered.");
         }
 
         var now = _dateTimeProvider.UtcNow;
@@ -53,11 +56,12 @@ public class RegisterHandler
         var passwordHash = _passwordHasher.Hash(command.Password);
 
         // Create user
-        var user = User.Create(command.Username, passwordHash, now);
+        var user = User.Create(command.Email, passwordHash, now);
         await _userRepository.AddAsync(user, cancellationToken);
 
-        // Auto-create personal organisation
-        var orgName = $"{user.Username}'s Workspace";
+        // Auto-create personal organisation (use email local part for display until onboarding)
+        var displayName = user.Email?.Value.Split('@')[0] ?? user.Username;
+        var orgName = $"{displayName}'s Workspace";
         var org = Organisation.Create(orgName, user.Id, now);
         await _organisationRepository.AddAsync(org, cancellationToken);
 
@@ -65,9 +69,15 @@ public class RegisterHandler
         var membership = Membership.Create(user.Id, org.Id, UserRole.OrgAdmin, now);
         await _membershipRepository.AddAsync(membership, cancellationToken);
 
+        // Create session so user is authenticated immediately (no separate login needed)
+        var session = Session.Create(user.Id, now, expiryHours: 24);
+        session.SetActiveOrg(org.Id);
+        await _sessionRepository.AddAsync(session, cancellationToken);
+
         return Result<RegisterResponse>.Success(new RegisterResponse(
             user.Id,
-            user.Username,
-            org.Id));
+            user.Email!.Value,
+            org.Id,
+            session.SessionToken));
     }
 }

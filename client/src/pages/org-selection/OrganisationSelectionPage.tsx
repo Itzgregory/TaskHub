@@ -5,41 +5,50 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-
-// Mock data
-const MOCK_ORGANISATIONS = [
-  { id: "1", name: "Acme Inc", role: "Owner" },
-  { id: "2", name: "Beta LLC", role: "Member" },
-];
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useCreateOrganisation, useSetActiveOrg } from "@/lib/api/hooks";
+import { EmptyState } from "@/components/features/EmptyState";
 
 export default function OrganisationSelectionPage() {
-  const [organisations, setOrganisations] = useState(MOCK_ORGANISATIONS);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newOrgName, setNewOrgName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { organisations, setActiveOrg } = useAuth();
+  const createOrgMutation = useCreateOrganisation();
+  const setActiveOrgMutation = useSetActiveOrg();
+  const isLoading = createOrgMutation.isPending;
 
-  const handleSelectOrg = (orgId: string) => {
-    // Set active org in context/store
+  const handleSelectOrg = async (orgId: string) => {
+    const org = organisations.find(o => o.orgId === orgId);
+    if (!org) return;
+
+    // Update backend active org + local context
+    await setActiveOrgMutation.mutateAsync({ orgId });
+    setActiveOrg(org);
     navigate({ to: "/dashboard/today" });
   };
 
-  const handleCreateOrg = () => {
+  const handleCreateOrg = async () => {
     if (!newOrgName.trim()) return;
-    
-    setIsLoading(true);
-    setTimeout(() => {
-      const newOrg = {
-        id: String(organisations.length + 1),
-        name: newOrgName,
-        role: "Owner",
-      };
-      setOrganisations([...organisations, newOrg]);
+
+    try {
+      const created = await createOrgMutation.mutateAsync({ name: newOrgName.trim() });
       setNewOrgName("");
       setIsCreateModalOpen(false);
-      setIsLoading(false);
+
+      // After creating, mark it active locally & via API
+      await setActiveOrgMutation.mutateAsync({ orgId: created.id });
+      const newOrg = {
+        orgId: created.id,
+        orgName: created.name,
+        role: "OrgAdmin" as const,
+        joinedAt: new Date().toISOString(),
+      };
+      setActiveOrg(newOrg);
       navigate({ to: "/dashboard/today" });
-    }, 1000);
+    } catch {
+      // Errors are surfaced via toasts by hooks/caller if desired
+    }
   };
 
   const handleSkip = () => {
@@ -76,7 +85,7 @@ export default function OrganisationSelectionPage() {
               </span>
             </div>
           </div>
-          
+
           <div className="text-center">
             <h1 className="text-xl font-semibold" style={{ color: "var(--c-texPri)" }}>
               Choose your workspace
@@ -96,8 +105,8 @@ export default function OrganisationSelectionPage() {
               <div className="space-y-2">
                 {organisations.map((org) => (
                   <button
-                    key={org.id}
-                    onClick={() => handleSelectOrg(org.id)}
+                    key={org.orgId}
+                    onClick={() => handleSelectOrg(org.orgId)}
                     className="w-full flex items-center justify-between p-3 rounded-xl text-left transition-all hover:scale-[1.02]"
                     style={{
                       backgroundColor: "var(--c-bacSec)",
@@ -113,14 +122,14 @@ export default function OrganisationSelectionPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium" style={{ color: "var(--c-texPri)" }}>
-                          {org.name}
+                          {org.orgName}
                         </p>
                         <span
                           className="text-xs px-2 py-0.5 rounded-full"
                           style={{
-                            backgroundColor: 
-                              org.role === "Owner" ? "var(--c-bluBacSec)" : "var(--c-bacTer)",
-                            color: org.role === "Owner" ? "var(--c-bluTexAccPri)" : "var(--c-texSec)",
+                            backgroundColor:
+                              org.role === "OrgAdmin" ? "var(--c-bluBacSec)" : "var(--c-bacTer)",
+                            color: org.role === "OrgAdmin" ? "var(--c-bluTexAccPri)" : "var(--c-texSec)",
                           }}
                         >
                           {org.role}
@@ -133,22 +142,11 @@ export default function OrganisationSelectionPage() {
               </div>
             </div>
           ) : (
-            <div className="text-center py-8 space-y-4">
-              <div
-                className="w-16 h-16 rounded-full mx-auto flex items-center justify-center"
-                style={{ backgroundColor: "var(--c-bacTer)" }}
-              >
-                <Building2 className="w-8 h-8" style={{ color: "var(--c-icoSec)" }} />
-              </div>
-              <div>
-                <p className="text-sm font-medium" style={{ color: "var(--c-texPri)" }}>
-                  No organisations yet
-                </p>
-                <p className="text-xs mt-1" style={{ color: "var(--c-texSec)" }}>
-                  Create one to start collaborating
-                </p>
-              </div>
-            </div>
+            <EmptyState
+              icon={<Building2 className="w-8 h-8" style={{ color: "var(--c-icoSec)" }} />}
+              title="No organisations yet"
+              description="Create one to start collaborating"
+            />
           )}
 
           <div className="space-y-3 pt-2">
@@ -164,13 +162,14 @@ export default function OrganisationSelectionPage() {
               Create New Organisation
             </Button>
 
-            <button
+            <Button
+              variant="link"
               onClick={handleSkip}
-              className="w-full text-sm py-2 transition-opacity hover:opacity-80"
+              className="w-full text-sm"
               style={{ color: "var(--c-texSec)" }}
             >
               Skip to personal workspace →
-            </button>
+            </Button>
           </div>
         </CardContent>
       </Card>
