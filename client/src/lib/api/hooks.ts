@@ -252,6 +252,9 @@ export const useAddMember = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.organisations.myOrgs(),
       });
+      queryClient.invalidateQueries({
+        queryKey: ['organisations', 'members'],
+      });
     },
   });
 };
@@ -266,6 +269,9 @@ export const useRemoveMember = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.organisations.myOrgs(),
       });
+      queryClient.invalidateQueries({
+        queryKey: ['organisations', 'members'],
+      });
     },
   });
 };
@@ -279,6 +285,9 @@ export const useChangeRole = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.organisations.myOrgs(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['organisations', 'members'],
       });
     },
   });

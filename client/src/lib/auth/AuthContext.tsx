@@ -48,6 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
+  const [hasExplicitlySetOrg, setHasExplicitlySetOrg] = useState(false);
+
   const navigate = useNavigate();
   const { data: orgsData, isLoading: orgsLoading } = useMyOrganisations({
     enabled: !!user,
@@ -60,19 +62,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Sync active org with organisations list
   useEffect(() => {
-    if (organisations.length > 0 && !activeOrg) {
-      // Set first org as active if none selected
+    if (organisations.length > 0 && !activeOrg && !hasExplicitlySetOrg) {
+      // Set first org as active if none selected and user hasn't explicitly cleared it
       setActiveOrgState(organisations[0]);
       localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, JSON.stringify(organisations[0]));
     } else if (activeOrg && organisations.length > 0) {
-      // Update active org if it exists in the list
+      // Update active org if it exists in the list (keeps role in sync)
       const updated = organisations.find(o => o.orgId === activeOrg.orgId);
       if (updated) {
         setActiveOrgState(updated);
         localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, JSON.stringify(updated));
       }
     }
-  }, [organisations, activeOrg]);
+  }, [organisations, activeOrg, hasExplicitlySetOrg]);
 
   const setUser = useCallback((newUser: AuthUser | null) => {
     setUserState(newUser);
@@ -82,11 +84,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(AUTH_STORAGE_KEY);
       localStorage.removeItem(ACTIVE_ORG_STORAGE_KEY);
       setActiveOrgState(null);
+      setHasExplicitlySetOrg(false);
     }
   }, []);
 
   const setActiveOrg = useCallback((org: OrgMembershipDto | null) => {
     setActiveOrgState(org);
+    setHasExplicitlySetOrg(true); // User made an explicit choice
     if (org) {
       localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, JSON.stringify(org));
     } else {

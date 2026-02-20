@@ -43,6 +43,7 @@ function reducer(state: AppState, action: Action): AppState {
         createdAt: now(),
         updatedAt: now(),
         order: maxOrder + 1,
+        version: 1,
       };
       return { ...state, tasks: [...state.tasks, task] };
     }

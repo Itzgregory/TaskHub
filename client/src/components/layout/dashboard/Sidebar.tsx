@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays, CheckCircle2, ChevronDown, ChevronRight,
   Inbox, LayoutGrid, Plus, Sun, Moon,
-  User, Settings, Circle, Building2, Users, FolderKanban, Activity,
+  User, Settings, Circle, Building2, Users, FolderKanban, Activity, LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useStore, actions } from "@/lib/store";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useSetActiveOrg } from "@/lib/api/hooks";
+import { useQueryClient } from "@tanstack/react-query";
 
 // Personal workspace navigation
 const PERSONAL_NAV_ITEMS = [
@@ -39,13 +42,6 @@ const PROJECT_COLORS = [
   "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6",
 ];
 
-// Mock org data - replace with actual from context
-const MOCK_ORGS = [
-  { id: "1", name: "Acme Inc", role: "Owner", initials: "AI", taskCount: 12 },
-  { id: "2", name: "Beta LLC", role: "Member", initials: "BL", taskCount: 5 },
-  { id: null, name: "Personal Workspace", role: null, initials: "PW", taskCount: 3 },
-];
-
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
@@ -54,16 +50,17 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
   const { state, dispatch, getProjectTaskCount } = useStore();
+  const { activeOrg, organisations, setActiveOrg, user, logout } = useAuth();
+  const setActiveOrgMutation = useSetActiveOrg();
+  const queryClient = useQueryClient();
   const location = useLocation();
-  const [projectsOpen, setProjectsOpen] = useState(true);
   const navigate = useNavigate();
+  const [projectsOpen, setProjectsOpen] = useState(true);
   const [addingProject, setAddingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
-  // In real app, this would come from context
-  const [activeOrg, setActiveOrg] = useState(MOCK_ORGS[0]);
 
   // Determine if we're in organisation mode
-  const isOrgMode = activeOrg.id !== null;
+  const isOrgMode = !!activeOrg;
 
   const handleAddProject = () => {
     if (!newProjectName.trim()) return;
@@ -89,6 +86,33 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
     }
     return location.pathname === `/dashboard/projects/${projectId}`;
   };
+
+  // Handle org switching
+  const handleSwitchOrg = async (org: typeof organisations[0]) => {
+    setActiveOrg(org);
+    try {
+      await setActiveOrgMutation.mutateAsync({ orgId: org.orgId });
+    } catch {
+      // Silently fail — local state is already set
+    }
+    // Invalidate all data queries so new org data is fetched
+    queryClient.invalidateQueries({ queryKey: ['todos'] });
+    queryClient.invalidateQueries({ queryKey: ['organisations', 'members'] });
+    queryClient.invalidateQueries({ queryKey: ['audit'] });
+    navigate({ to: "/dashboard/org/home" });
+  };
+
+  const handleSwitchToPersonal = () => {
+    setActiveOrg(null);
+    queryClient.invalidateQueries({ queryKey: ['todos'] });
+    navigate({ to: "/dashboard/today" });
+  };
+
+  // Org display helpers
+  const orgInitials = activeOrg
+    ? activeOrg.orgName.slice(0, 2).toUpperCase()
+    : "PW";
+  const orgDisplayName = activeOrg ? activeOrg.orgName : "Personal Workspace";
 
   return (
     <aside
@@ -119,7 +143,7 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
               TaskHub
               {isOrgMode && (
                 <span className="text-xs ml-2" style={{ color: "var(--c-texSec)" }}>
-                  • {activeOrg.name}
+                  • {activeOrg.orgName}
                 </span>
               )}
             </span>
@@ -191,7 +215,7 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
           </div>
         )}
 
-        {/* Projects Section - always visible but paths change based on mode */}
+        {/* Projects Section */}
         <div className="pt-3">
           {!collapsed && (
             <button
@@ -209,67 +233,37 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
               {state.projects.map((project) => {
                 const count = getProjectTaskCount(project.id);
                 const active = isProjectActive(project.id);
-                
-                // Conditionally render the Link based on mode
-                if (isOrgMode) {
-                  return (
-                    <Link
-                      key={project.id}
-                      to="/dashboard/org/projects/$projectId"
-                      params={{ projectId: project.id }}
-                      className={`nav-item ${active ? "active" : ""} ${collapsed ? "justify-center" : ""}`}
-                      title={collapsed ? project.name : undefined}
-                      activeProps={{ className: "active" }}
-                    >
-                      <Circle
-                        className="w-3 h-3 flex-shrink-0"
-                        style={{ color: project.color, fill: project.color }}
-                      />
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1 truncate">{project.name}</span>
-                          {count > 0 && (
-                            <span
-                              className="text-xs font-mono"
-                              style={{ color: "var(--c-texTer)" }}
-                            >
-                              {count}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </Link>
-                  );
-                } else {
-                  return (
-                    <Link
-                      key={project.id}
-                      to="/dashboard/projects/$projectId"
-                      params={{ projectId: project.id }}
-                      className={`nav-item ${active ? "active" : ""} ${collapsed ? "justify-center" : ""}`}
-                      title={collapsed ? project.name : undefined}
-                      activeProps={{ className: "active" }}
-                    >
-                      <Circle
-                        className="w-3 h-3 flex-shrink-0"
-                        style={{ color: project.color, fill: project.color }}
-                      />
-                      {!collapsed && (
-                        <>
-                          <span className="flex-1 truncate">{project.name}</span>
-                          {count > 0 && (
-                            <span
-                              className="text-xs font-mono"
-                              style={{ color: "var(--c-texTer)" }}
-                            >
-                              {count}
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </Link>
-                  );
-                }
+                const linkTo = isOrgMode
+                  ? "/dashboard/org/projects/$projectId"
+                  : "/dashboard/projects/$projectId";
+                return (
+                  <Link
+                    key={project.id}
+                    to={linkTo}
+                    params={{ projectId: project.id }}
+                    className={`nav-item ${active ? "active" : ""} ${collapsed ? "justify-center" : ""}`}
+                    title={collapsed ? project.name : undefined}
+                    activeProps={{ className: "active" }}
+                  >
+                    <Circle
+                      className="w-3 h-3 flex-shrink-0"
+                      style={{ color: project.color, fill: project.color }}
+                    />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 truncate">{project.name}</span>
+                        {count > 0 && (
+                          <span
+                            className="text-xs font-mono"
+                            style={{ color: "var(--c-texTer)" }}
+                          >
+                            {count}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Link>
+                );
               })}
 
               {/* Add project */}
@@ -313,147 +307,159 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
           className="px-2 py-3 space-y-2"
           style={{ borderTop: "1px solid var(--c-borPri)" }}
         >
-          {/* Organisation switcher with avatar */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="w-full flex items-center justify-between px-2 py-2 rounded-lg transition-colors hover:opacity-80"
+          {/* Organisation switcher */}
+          {organisations.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="w-full flex items-center justify-between px-2 py-2 rounded-lg transition-colors hover:opacity-80"
+                  style={{ backgroundColor: "var(--c-bacTer)" }}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Avatar className="w-6 h-6">
+                      <AvatarFallback
+                        className="text-xs"
+                        style={{
+                          backgroundColor: "var(--c-bluBacAccPri)",
+                          color: "#fff"
+                        }}
+                      >
+                        {orgInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium truncate" style={{ color: "var(--c-texPri)" }}>
+                      {orgDisplayName}
+                    </span>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--c-icoSec)" }} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="w-56"
                 style={{
-                  backgroundColor: "var(--c-bacTer)",
+                  backgroundColor: "var(--c-bacEle)",
+                  borderColor: "var(--c-borPri)",
                 }}
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  <Avatar className="w-6 h-6">
-                    <AvatarFallback 
-                      className="text-xs"
-                      style={{ 
-                        backgroundColor: "var(--c-bluBacAccPri)",
-                        color: "#fff"
-                      }}
-                    >
-                      {activeOrg.initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium truncate" style={{ color: "var(--c-texPri)" }}>
-                    {activeOrg.name}
-                  </span>
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "var(--c-icoSec)" }} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align="start"
-              className="w-56"
-              style={{
-                backgroundColor: "var(--c-bacEle)",
-                borderColor: "var(--c-borPri)",
-              }}
-            >
-              <DropdownMenuLabel style={{ color: "var(--c-texTer)" }}>
-                Switch workspace
-              </DropdownMenuLabel>
-              
-              {MOCK_ORGS.map((org) => (
+                <DropdownMenuLabel style={{ color: "var(--c-texTer)" }}>
+                  Switch workspace
+                </DropdownMenuLabel>
+
+                {/* Personal workspace option */}
                 <DropdownMenuItem
-                  key={org.id || "personal"}
-                  onClick={() => setActiveOrg(org)}
+                  onClick={handleSwitchToPersonal}
                   className="flex items-center gap-3 py-2 cursor-pointer"
                   style={{
-                    color: activeOrg.id === org.id ? "var(--c-texPri)" : "var(--c-texSec)",
+                    color: !activeOrg ? "var(--c-texPri)" : "var(--c-texSec)",
                   }}
                 >
                   <Avatar className="w-5 h-5">
-                    <AvatarFallback 
+                    <AvatarFallback
                       className="text-[10px]"
-                      style={{ 
-                        backgroundColor: org.id === activeOrg.id ? "var(--c-bluBacAccPri)" : "var(--c-bacTer)",
-                        color: org.id === activeOrg.id ? "#fff" : "var(--c-texSec)",
+                      style={{
+                        backgroundColor: !activeOrg ? "var(--c-bluBacAccPri)" : "var(--c-bacTer)",
+                        color: !activeOrg ? "#fff" : "var(--c-texSec)",
                       }}
                     >
-                      {org.initials}
+                      PW
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 min-w-0 flex items-center justify-between">
-                    <span className="text-sm truncate">{org.name}</span>
-                    {org.role && (
-                      <Badge 
+                  <span className="text-sm truncate">Personal Workspace</span>
+                </DropdownMenuItem>
+
+                {organisations.length > 0 && (
+                  <DropdownMenuSeparator style={{ backgroundColor: "var(--c-borPri)" }} />
+                )}
+
+                {/* Real organisations from API */}
+                {organisations.map((org) => (
+                  <DropdownMenuItem
+                    key={org.orgId}
+                    onClick={() => handleSwitchOrg(org)}
+                    className="flex items-center gap-3 py-2 cursor-pointer"
+                    style={{
+                      color: activeOrg?.orgId === org.orgId ? "var(--c-texPri)" : "var(--c-texSec)",
+                    }}
+                  >
+                    <Avatar className="w-5 h-5">
+                      <AvatarFallback
+                        className="text-[10px]"
+                        style={{
+                          backgroundColor: activeOrg?.orgId === org.orgId ? "var(--c-bluBacAccPri)" : "var(--c-bacTer)",
+                          color: activeOrg?.orgId === org.orgId ? "#fff" : "var(--c-texSec)",
+                        }}
+                      >
+                        {org.orgName.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0 flex items-center justify-between">
+                      <span className="text-sm truncate">{org.orgName}</span>
+                      <Badge
                         variant="secondary"
                         className="ml-2 text-[10px] px-1 py-0"
                         style={{
-                          backgroundColor: org.role === "Owner" ? "var(--c-bluBacSec)" : "var(--c-bacTer)",
-                          color: org.role === "Owner" ? "var(--c-bluTexAccPri)" : "var(--c-texSec)",
+                          backgroundColor: org.role === "OrgAdmin" ? "var(--c-bluBacSec)" : "var(--c-bacTer)",
+                          color: org.role === "OrgAdmin" ? "var(--c-bluTexAccPri)" : "var(--c-texSec)",
                         }}
                       >
-                        {org.role}
+                        {org.role === "OrgAdmin" ? "Admin" : "Member"}
                       </Badge>
-                    )}
-                  </div>
-                </DropdownMenuItem>
-              ))}
+                    </div>
+                  </DropdownMenuItem>
+                ))}
 
-              <DropdownMenuSeparator style={{ backgroundColor: "var(--c-borPri)" }} />
-              
-              <DropdownMenuItem
-                className="flex items-center gap-3 py-2 cursor-pointer"
-                style={{ color: "var(--c-texSec)" }}
-              >
-                <Building2 className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-                <span className="text-sm">Browse all organisations</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuSeparator style={{ backgroundColor: "var(--c-borPri)" }} />
+
+                <DropdownMenuItem
+                  onClick={() => navigate({ to: "/auth/org-selection" })}
+                  className="flex items-center gap-3 py-2 cursor-pointer"
+                  style={{ color: "var(--c-texSec)" }}
+                >
+                  <Building2 className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+                  <span className="text-sm">Manage organisations</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           {/* User actions row */}
           <div className="flex items-center justify-around pt-1">
-            {isOrgMode ? (
-              <Link
-                to="/dashboard/profile"
-                className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/org/profile") ? "active" : ""}`}
-                title="Profile"
-                activeProps={{ className: "active" }}
-              >
-                <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-              </Link>
-            ) : (
-              <Link
-                to="/dashboard/profile"
-                className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/profile") ? "active" : ""}`}
-                title="Profile"
-                activeProps={{ className: "active" }}
-              >
-                <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-              </Link>
-            )}
-            
-            {isOrgMode ? (
-              <Link
-                to="/dashboard/settings"  
-                className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/org/settings") ? "active" : ""}`}
-                title="Settings"
-                activeProps={{ className: "active" }}
-              >
-                <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-              </Link>
-            ) : (
-              <Link
-                to="/dashboard/settings"
-                className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/settings") ? "active" : ""}`}
-                title="Settings"
-                activeProps={{ className: "active" }}
-              >
-                <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-              </Link>
-            )}
-            
+            <Link
+              to="/dashboard/profile"
+              className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/profile") ? "active" : ""}`}
+              title="Profile"
+              activeProps={{ className: "active" }}
+            >
+              <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+            </Link>
+
+            <Link
+              to="/dashboard/settings"
+              className={`nav-item w-8 h-8 p-0 justify-center ${isActive("/dashboard/settings") ? "active" : ""}`}
+              title="Settings"
+              activeProps={{ className: "active" }}
+            >
+              <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+            </Link>
+
             <button
               onClick={toggleTheme}
               className="nav-item w-8 h-8 p-0 justify-center"
               title={state.theme === "light" ? "Dark mode" : "Light mode"}
             >
-              {state.theme === "light" 
+              {state.theme === "light"
                 ? <Moon className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
                 : <Sun className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
               }
+            </button>
+
+            <button
+              onClick={logout}
+              className="nav-item w-8 h-8 p-0 justify-center"
+              title="Log out"
+            >
+              <LogOut className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
             </button>
           </div>
         </div>
@@ -465,64 +471,50 @@ export function Sidebar({ collapsed, onToggle, onNewTask }: SidebarProps) {
         >
           <button className="nav-item w-full justify-center p-0 h-8">
             <Avatar className="w-5 h-5">
-              <AvatarFallback 
+              <AvatarFallback
                 className="text-[8px]"
                 style={{ backgroundColor: "var(--c-bluBacAccPri)", color: "#fff" }}
               >
-                {activeOrg.initials}
+                {orgInitials}
               </AvatarFallback>
             </Avatar>
           </button>
-          
-          {isOrgMode ? (
-            <Link
-              to="/dashboard/profile"
-              className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/org/profile") ? "active" : ""}`}
-              title="Profile"
-              activeProps={{ className: "active" }}
-            >
-              <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-            </Link>
-          ) : (
-            <Link
-              to="/dashboard/profile"
-              className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/profile") ? "active" : ""}`}
-              title="Profile"
-              activeProps={{ className: "active" }}
-            >
-              <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-            </Link>
-          )}
-          
-          {isOrgMode ? (
-            <Link
-              to="/dashboard/settings"
-              className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/org/settings") ? "active" : ""}`}
-              title="Settings"
-              activeProps={{ className: "active" }}
-            >
-              <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-            </Link>
-          ) : (
-            <Link
-              to="/dashboard/settings"
-              className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/settings") ? "active" : ""}`}
-              title="Settings"
-              activeProps={{ className: "active" }}
-            >
-              <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
-            </Link>
-          )}
-          
+
+          <Link
+            to="/dashboard/profile"
+            className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/profile") ? "active" : ""}`}
+            title="Profile"
+            activeProps={{ className: "active" }}
+          >
+            <User className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+          </Link>
+
+          <Link
+            to="/dashboard/settings"
+            className={`nav-item w-full justify-center p-0 h-8 ${isActive("/dashboard/settings") ? "active" : ""}`}
+            title="Settings"
+            activeProps={{ className: "active" }}
+          >
+            <Settings className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
+          </Link>
+
           <button
             onClick={toggleTheme}
             className="nav-item w-full justify-center p-0 h-8"
             title={state.theme === "light" ? "Dark mode" : "Light mode"}
           >
-            {state.theme === "light" 
+            {state.theme === "light"
               ? <Moon className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
               : <Sun className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
             }
+          </button>
+
+          <button
+            onClick={logout}
+            className="nav-item w-full justify-center p-0 h-8"
+            title="Log out"
+          >
+            <LogOut className="w-4 h-4" style={{ color: "var(--c-icoSec)" }} />
           </button>
         </div>
       )}
