@@ -75,6 +75,8 @@ export function mapTodoDtoToTask(dto: TodoItemDto, projectId?: string): Task {
     projectId: projectId || dto.orgId, // Use orgId as projectId for now
     dueDate: dto.dueDate ? dto.dueDate.split('T')[0] : undefined, // Extract date part
     tags: dto.tags,
+    assignedToUserId: dto.assignedToUserId,
+    assignedAt: dto.assignedAt,
     createdAt: dto.createdAt,
     updatedAt: dto.updatedAt,
     completedAt: dto.status === 'Done' ? dto.updatedAt : undefined,
@@ -92,6 +94,7 @@ export function mapTaskToCreateRequest(task: Partial<Task>, orgId: string) {
     priority: task.priority ? mapPriorityToBackend(task.priority) : undefined,
     tags: task.tags || [],
     dueDate: task.dueDate ? `${task.dueDate}T00:00:00Z` : undefined,
+    assignedToUserId: task.assignedToUserId || undefined,
   };
 }
 
@@ -105,6 +108,7 @@ export function mapTaskToUpdateRequest(task: Task, version: number) {
     priority: task.priority ? mapPriorityToBackend(task.priority) : undefined,
     tags: task.tags || [],
     dueDate: task.dueDate ? `${task.dueDate}T00:00:00Z` : undefined,
-    version,
+    expectedVersion: version,
+    assignedToUserId: task.assignedToUserId || undefined,
   };
 }

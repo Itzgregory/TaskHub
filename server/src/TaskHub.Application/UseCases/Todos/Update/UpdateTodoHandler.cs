@@ -78,7 +78,8 @@ public class UpdateTodoHandler
             command.Priority,
             tags,
             command.DueDate,
-            _dateTimeProvider.UtcNow);
+            _dateTimeProvider.UtcNow,
+            command.AssignedToUserId);
 
         // Save
         await _todoRepository.UpdateAsync(todo, cancellationToken);
@@ -104,6 +105,8 @@ public class UpdateTodoHandler
             todo.Priority,
             todo.Tags.Select(t => t.Value).ToList(),
             todo.DueDate,
+            todo.AssignedToUserId,
+            todo.AssignedAt,
             todo.Version,
             todo.UpdatedAt,
             etag));

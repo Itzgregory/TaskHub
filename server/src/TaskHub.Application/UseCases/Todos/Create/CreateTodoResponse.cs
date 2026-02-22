@@ -11,6 +11,8 @@ public record CreateTodoResponse(
     Priority Priority,
     List<string> Tags,
     DateTime? DueDate,
+    Guid? AssignedToUserId,
+    DateTime? AssignedAt,
     int Version,
     DateTime CreatedAt,
     string ETag

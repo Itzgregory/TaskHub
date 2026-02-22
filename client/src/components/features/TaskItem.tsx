@@ -3,7 +3,7 @@ import { Calendar, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { TaskFormModal } from "./TaskFormModal";
 import type { Priority, Task } from "../../lib/types";
 import { useStore } from "../../lib/store";
-import { useToggleTodoStatus, useSoftDeleteTodo } from "@/lib/api/hooks";
+import { useToggleTodoStatus, useSoftDeleteTodo, useOrgMembers } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatRelativeDate, getTodayStr } from "@/lib/utils/tasks";
@@ -25,6 +25,13 @@ function isOverdue(dateStr: string): boolean {
   return dateStr < getTodayStr();
 }
 
+/** Returns up to 2 uppercase initials from a username or userId */
+function getInitials(name: string): string {
+  const parts = name.trim().split(/[\s._-]+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
 interface TaskItemProps {
   task: Task;
   showProject?: boolean;
@@ -37,11 +44,18 @@ export function TaskItem({ task, showProject }: TaskItemProps) {
   const toggleMutation = useToggleTodoStatus();
   const deleteMutation = useSoftDeleteTodo();
 
+  const { data: membersData } = useOrgMembers(activeOrg?.orgId);
+  const memberMap = new Map(membersData?.members.map(m => [m.userId, m.username]) ?? []);
+
   const [editing, setEditing] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isDone = task.status === "done";
   const project = state.projects.find(p => p.id === task.projectId);
+
+  const assigneeName = task.assignedToUserId
+    ? (memberMap.get(task.assignedToUserId) ?? task.assignedToUserId.slice(0, 8))
+    : null;
 
   const handleToggle = async () => {
     if (!activeOrg?.orgId || toggleMutation.isPending) return;
@@ -52,7 +66,7 @@ export function TaskItem({ task, showProject }: TaskItemProps) {
         data: {
           id: task.id,
           orgId: activeOrg.orgId,
-          version: task.version,
+          expectedVersion: task.version,
         },
       });
     } catch (err) {
@@ -167,6 +181,21 @@ export function TaskItem({ task, showProject }: TaskItemProps) {
                 #{tag}
               </span>
             ))}
+
+            {/* Assignee badge */}
+            {assigneeName && (
+              <span
+                className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold flex-shrink-0"
+                title={`Assigned to ${assigneeName}`}
+                style={{
+                  backgroundColor: "var(--c-bluBacSec)",
+                  color: "var(--c-bluTexAccPri)",
+                  border: "1px solid var(--c-bluTexAccPri)",
+                }}
+              >
+                {getInitials(assigneeName)}
+              </span>
+            )}
           </div>
         </div>
 

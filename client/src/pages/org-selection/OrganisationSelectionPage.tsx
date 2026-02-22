@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useCreateOrganisation, useSetActiveOrg } from "@/lib/api/hooks";
 import { EmptyState } from "@/components/features/EmptyState";
+import { toast } from "@/hooks/use-toast";
 
 export default function OrganisationSelectionPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -19,6 +20,7 @@ export default function OrganisationSelectionPage() {
   const isLoading = createOrgMutation.isPending;
 
   const handleSelectOrg = async (orgId: string) => {
+    console.log("Selected orgId:", orgId);
     const org = organisations.find(o => o.orgId === orgId);
     if (!org) return;
 
@@ -26,6 +28,10 @@ export default function OrganisationSelectionPage() {
     await setActiveOrgMutation.mutateAsync({ orgId });
     setActiveOrg(org);
     navigate({ to: "/dashboard/today" });
+    toast({
+          title: "Welcome! to TaskHub for " + org.orgName,
+          description: "Your organisation has been set up successfully.",
+        });
   };
 
   const handleCreateOrg = async () => {

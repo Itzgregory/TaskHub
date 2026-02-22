@@ -67,9 +67,9 @@ export default function OnboardingPage() {
           });
         }
 
-        navigate({ to: "/dashboard/today" });
+        navigate({ to: "/auth/org-selection" });
         toast({
-          title: "Welcome to TaskHub!",
+          title: "Onboarding complete!",
           description: "Your profile has been set up successfully.",
         });
       } catch (err) {

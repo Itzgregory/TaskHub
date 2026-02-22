@@ -15,6 +15,8 @@ public class TodoItem : AuditableEntity
     public Priority Priority { get; private set; }
     public List<Tag> Tags { get; private set; } = new();
     public DateTime? DueDate { get; private set; }
+    public Guid? AssignedToUserId { get; private set; }
+    public DateTime? AssignedAt { get; private set; }
     public int Version { get; private set; } = 1;
 
     // Soft delete
@@ -41,7 +43,8 @@ public class TodoItem : AuditableEntity
         Priority priority,
         List<Tag> tags,
         DateTime? dueDate,
-        DateTime now)
+        DateTime now,
+        Guid? assignedToUserId = null)
     {
         ValidateTitle(title);
         ValidateDescription(description);
@@ -56,7 +59,9 @@ public class TodoItem : AuditableEntity
             Status = TodoStatus.Open,
             Priority = priority,
             Tags = tags ?? new List<Tag>(),
-            DueDate = dueDate
+            DueDate = dueDate,
+            AssignedToUserId = assignedToUserId,
+            AssignedAt = assignedToUserId.HasValue ? now : null
         };
 
         todo.SetCreated(now);
@@ -69,7 +74,8 @@ public class TodoItem : AuditableEntity
         Priority priority,
         List<Tag> tags,
         DateTime? dueDate,
-        DateTime now)
+        DateTime now,
+        Guid? assignedToUserId = null)
     {
         if (IsDeleted)
             throw new BusinessRuleException("todo.deleted", 
@@ -88,6 +94,13 @@ public class TodoItem : AuditableEntity
         Priority = priority;
         Tags = tags ?? new List<Tag>();
         DueDate = dueDate;
+
+        // Update assignment
+        if (assignedToUserId != AssignedToUserId)
+        {
+            AssignedToUserId = assignedToUserId;
+            AssignedAt = assignedToUserId.HasValue ? now : null;
+        }
 
         Version++;
         SetUpdated(now);

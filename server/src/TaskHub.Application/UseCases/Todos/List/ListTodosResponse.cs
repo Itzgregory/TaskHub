@@ -15,6 +15,8 @@ public record TodoItemDto(
     Priority Priority,
     List<string> Tags,
     DateTime? DueDate,
+    Guid? AssignedToUserId,
+    DateTime? AssignedAt,
     bool IsDeleted,
     bool IsArchived,
     int Version,

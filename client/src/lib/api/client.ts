@@ -40,12 +40,18 @@ class ApiClient {
         'X-Correlation-ID': correlationId,
         ...options.headers,
       },
-      credentials: 'include', // Important for session cookies
+      // important for session cookies...unifiedbeez issue with igee
+      credentials: 'include', 
     };
 
     try {
       const response = await fetch(url, config);
-      const data: ApiResponse<T> = await response.json();
+      // so i encountered an issue where my hooks were running into errors when the response body was empty
+      // so what i am doing here is that instead of just doing await response.json(), i am doing await response.text, so i satisfy empty 204 response bodies.
+      // why i didnt fix from the backend was because there would be no meaningful data to return here, and returning no content was correct
+      // i could have also tried to return {sucess: true} with 200 status code, but then that would be a wrong solution since i will be bending REST semantics just to appease the client
+      const text = await response.text();
+      const data: ApiResponse<T> = text ? await JSON.parse(text) : { success: true };
 
       if (!response.ok || !data.success) {
         const error: ApiError = {

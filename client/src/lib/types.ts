@@ -11,6 +11,8 @@ export interface Task {
   projectId?: string;
   dueDate?: string; // ISO date string YYYY-MM-DD
   tags: string[];
+  assignedToUserId?: string;
+  assignedAt?: string;
   createdAt: string;
   updatedAt: string;
   completedAt?: string;

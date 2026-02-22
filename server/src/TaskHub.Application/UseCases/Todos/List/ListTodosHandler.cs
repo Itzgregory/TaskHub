@@ -68,6 +68,8 @@ public class ListTodosHandler
             todo.Priority,
             todo.Tags.Select(t => t.Value).ToList(),
             todo.DueDate,
+            todo.AssignedToUserId,
+            todo.AssignedAt,
             todo.IsDeleted,
             todo.IsArchived,
             todo.Version,

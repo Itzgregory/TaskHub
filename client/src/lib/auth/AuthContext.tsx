@@ -72,6 +72,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (updated) {
         setActiveOrgState(updated);
         localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, JSON.stringify(updated));
+      } else {
+        // Stale org from localStorage — not in current list. Fall back to first org.
+        setActiveOrgState(organisations[0]);
+        localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, JSON.stringify(organisations[0]));
       }
     }
   }, [organisations, activeOrg, hasExplicitlySetOrg]);

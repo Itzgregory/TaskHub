@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
-import { X, Calendar, Flag, Folder } from "lucide-react";
+import { useState } from "react";
+import { X, Calendar, Flag, User } from "lucide-react";
 import type { Priority, Task } from "../../lib/types";
-import { useStore } from "../../lib/store";
-import { useCreateTodo, useUpdateTodo } from "@/lib/api/hooks";
+import { useCreateTodo, useUpdateTodo, useOrgMembers } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { mapTaskToCreateRequest, mapTaskToUpdateRequest } from "@/lib/api/mappers";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +25,6 @@ interface TaskFormModalProps {
 }
 
 export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDueDate, onClose }: TaskFormModalProps) {
-  const { state } = useStore();
   const { activeOrg } = useAuth();
   const { toast } = useToast();
   const createMutation = useCreateTodo();
@@ -35,18 +33,22 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
   const isEditing = !!task;
   const orgId = defaultOrgId || activeOrg?.orgId;
 
+  const { data: membersData } = useOrgMembers(orgId);
+  const members = membersData?.members ?? [];
+
   const [title, setTitle] = useState(task?.title ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "none");
-  const [projectId, setProjectId] = useState<string | undefined>(task?.projectId ?? defaultProjectId);
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? "");
   const [tags, setTags] = useState(task?.tags.join(", ") ?? "");
+  const [assignedToUserId, setAssignedToUserId] = useState(task?.assignedToUserId ?? "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !orgId) return;
 
     const tagArray = tags.split(",").map(t => t.trim()).filter(Boolean);
+    const assignee = assignedToUserId || undefined;
 
     try {
       if (isEditing && task) {
@@ -57,9 +59,10 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
             title: title.trim(),
             description: description.trim() || undefined,
             priority,
-            projectId: projectId || undefined,
+            projectId: task.projectId ?? orgId,
             dueDate: dueDate || undefined,
             tags: tagArray,
+            assignedToUserId: assignee,
           },
           version
         );
@@ -74,9 +77,10 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
             title: title.trim(),
             description: description.trim() || undefined,
             priority,
-            projectId: projectId || undefined,
+            projectId: defaultProjectId,
             dueDate: dueDate || undefined,
             tags: tagArray,
+            assignedToUserId: assignee,
           },
           orgId
         );
@@ -163,23 +167,27 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
               />
             </div>
 
-            {/* Project */}
-            <div className="relative">
-              <select
-                value={projectId ?? ""}
-                onChange={e => setProjectId(e.target.value || undefined)}
-                className="th-select pr-7"
-              >
-                <option value="">No Project</option>
-                {state.projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-              <Folder
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none"
-                style={{ color: "var(--c-texTer)" }}
-              />
-            </div>
+            {/* Assign to Member */}
+            {members.length > 0 && (
+              <div className="relative">
+                <select
+                  value={assignedToUserId}
+                  onChange={e => setAssignedToUserId(e.target.value)}
+                  className="th-select pr-7"
+                >
+                  <option value="">Unassigned</option>
+                  {members.map(m => (
+                    <option key={m.userId} value={m.userId}>
+                      {m.username}
+                    </option>
+                  ))}
+                </select>
+                <User
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none"
+                  style={{ color: "var(--c-texTer)" }}
+                />
+              </div>
+            )}
 
             {/* Due Date */}
             <div className="relative">

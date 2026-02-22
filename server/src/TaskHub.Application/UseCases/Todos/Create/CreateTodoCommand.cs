@@ -8,5 +8,6 @@ public record CreateTodoCommand(
     string? Description,
     Priority Priority,
     List<string>? Tags,
-    DateTime? DueDate
+    DateTime? DueDate,
+    Guid? AssignedToUserId = null
 );

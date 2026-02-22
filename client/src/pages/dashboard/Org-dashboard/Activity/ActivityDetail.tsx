@@ -1,74 +1,56 @@
 import { AppLayout } from "@/components/layout/dashboard/AppLayout";
 import { Link, useParams } from "@tanstack/react-router";
-import {
-  ArrowLeft, CheckCircle2, Clock, FolderKanban, User,
-  ThumbsUp, MoreHorizontal,
-} from "lucide-react";
-import { ACTIVITY_TYPE_ICON, ACTIVITY_TYPE_COLOR, type ActivityType } from "@/lib/utils/org-constants";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-interface ActivityEvent {
-  id: string; user: string; avatar: string; avatarColor: string;
-  action: string; target: string; project: string; projectColor: string;
-  time: string; fullTime: string;
-  type: ActivityType;
-  description: string;
-  comments: { user: string; avatar: string; color: string; text: string; time: string }[];
-  relatedTasks: { title: string; status: "todo" | "in_progress" | "done" }[];
-}
-
-const EVENTS: Record<string, ActivityEvent> = {
-  "1": {
-    id: "1", user: "Sarah Chen", avatar: "SC", avatarColor: "#6366f1",
-    action: "completed", target: "Design system audit", project: "Product Redesign", projectColor: "#6366f1",
-    time: "2 minutes ago", fullTime: "Feb 20, 2025 at 2:47 PM",
-    type: "complete",
-    description: "Completed the full design system audit covering typography, colour palette, spacing tokens, and component variants. All findings documented in the shared Notion workspace. 14 inconsistencies identified and flagged for resolution in Sprint 16.",
-    comments: [
-      { user: "Alex Kim", avatar: "AK", color: "#3b82f6", text: "Great work! I'll pick up the typography inconsistencies first.", time: "1m ago" },
-      { user: "Marcus Johnson", avatar: "MJ", color: "#f59e0b", text: "The spacing token findings are really helpful. Let's discuss in standup.", time: "Just now" },
-    ],
-    relatedTasks: [
-      { title: "Update spacing tokens in design system", status: "todo" },
-      { title: "Fix typography scale inconsistencies", status: "in_progress" },
-      { title: "Document colour palette decisions", status: "done" },
-    ],
-  },
-  "2": {
-    id: "2", user: "Marcus Johnson", avatar: "MJ", avatarColor: "#f59e0b",
-    action: "commented on", target: "API integration spec", project: "API Infrastructure", projectColor: "#3b82f6",
-    time: "15 minutes ago", fullTime: "Feb 20, 2025 at 2:32 PM",
-    type: "comment",
-    description: "Added detailed comments on the REST vs GraphQL section of the API spec. Recommended a hybrid approach using REST for CRUD operations and GraphQL for complex data fetching. Included benchmark comparisons from staging.",
-    comments: [
-      { user: "Alex Johnson", avatar: "AJ", color: "#8b5cf6", text: "Solid analysis. The benchmark numbers are compelling. Let's prototype both approaches.", time: "10m ago" },
-    ],
-    relatedTasks: [
-      { title: "Prototype REST endpoints", status: "in_progress" },
-      { title: "Prototype GraphQL schema", status: "todo" },
-      { title: "Write API integration spec", status: "done" },
-    ],
-  },
-};
-
-const fallbackEvent = EVENTS["1"];
-
-
-
-const STATUS_ICON_MAP: Record<string, { icon: typeof CheckCircle2; color: string }> = {
-  todo: { icon: Clock, color: "var(--c-texDis)" },
-  in_progress: { icon: Clock, color: "var(--c-bluTexAccPri)" },
-  done: { icon: CheckCircle2, color: "var(--c-greTexAccPri)" },
-};
+import { ArrowLeft, Clock, Activity } from "lucide-react";
+import { AUDIT_ACTION_META, DEFAULT_AUDIT_META } from "@/lib/utils/org-constants";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useAuditLog, useOrgMembers } from "@/lib/api/hooks";
+import { useMemo } from "react";
+import { EmptyState } from "@/components/features/EmptyState";
 
 export default function ActivityDetail() {
   const { activityId } = useParams({ from: "/dashboard/org/activity/$activityId" });
-  const event = EVENTS[activityId || ""] || fallbackEvent;
-  const TypeIcon = ACTIVITY_TYPE_ICON[event.type];
+  const { activeOrg } = useAuth();
+
+  // Fetch a large page of audit entries and find the one matching this ID
+  // (no single-entry endpoint exists, so we search the list)
+  const { data } = useAuditLog(
+    activeOrg
+      ? { orgId: activeOrg.orgId, page: 1, pageSize: 100 }
+      : { orgId: "", page: 1, pageSize: 1 }
+  );
+  const { data: membersData } = useOrgMembers(activeOrg?.orgId);
+
+  const memberMap = useMemo(() => {
+    const map = new Map<string, string>();
+    membersData?.members?.forEach(m => map.set(m.userId, m.username));
+    return map;
+  }, [membersData]);
+
+  const entry = data?.entries?.items?.find(e => e.id === activityId);
+
+  if (!entry) {
+    return (
+      <AppLayout title="Activity Detail">
+        <Link to="/dashboard/org/activity" className="inline-flex items-center gap-1.5 text-xs font-medium mb-6 hover:underline" style={{ color: "var(--c-bluTexAccPri)" }}>
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Activity
+        </Link>
+        <EmptyState
+          icon={<Activity className="w-6 h-6" style={{ color: "var(--c-texDis)" }} />}
+          title="Event not found"
+          description="This audit event may have been paginated out or doesn't exist."
+        />
+      </AppLayout>
+    );
+  }
+
+  const meta = AUDIT_ACTION_META[entry.action] ?? DEFAULT_AUDIT_META;
+  const TypeIcon = meta.icon;
+  const username = memberMap.get(entry.actorUserId) || entry.actorUserId.slice(0, 8);
+  const initials = username.slice(0, 2).toUpperCase();
+  const timestamp = new Date(entry.timestamp);
 
   return (
-    <AppLayout title="Activity Detail" subtitle={event.target}>
+    <AppLayout title="Activity Detail" subtitle={meta.label}>
       {/* Back link */}
       <Link to="/dashboard/org/activity" className="inline-flex items-center gap-1.5 text-xs font-medium mb-6 hover:underline" style={{ color: "var(--c-bluTexAccPri)" }}>
         <ArrowLeft className="w-3.5 h-3.5" /> Back to Activity
@@ -77,89 +59,70 @@ export default function ActivityDetail() {
       {/* Event header */}
       <div className="rounded-xl p-5 mb-6" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" style={{ backgroundColor: event.avatarColor + "20", color: event.avatarColor }}>
-            {event.avatar}
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+            style={{ backgroundColor: meta.color + "20", color: meta.color }}
+          >
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h2 className="text-base font-semibold" style={{ color: "var(--c-texPri)" }}>{event.user}</h2>
-              <span className="text-sm" style={{ color: "var(--c-texTer)" }}>{event.action}</span>
-              <span className="text-sm font-semibold" style={{ color: "var(--c-texPri)" }}>{event.target}</span>
+              <h2 className="text-base font-semibold" style={{ color: "var(--c-texPri)" }}>{username}</h2>
+              <span className="text-sm" style={{ color: "var(--c-texTer)" }}>{meta.label}</span>
             </div>
             <div className="flex flex-wrap items-center gap-3 text-xs" style={{ color: "var(--c-texTer)" }}>
               <span className="flex items-center gap-1">
-                <TypeIcon className="w-3 h-3" style={{ color: ACTIVITY_TYPE_COLOR[event.type] }} />
-                {event.type.replace("_", " ")}
+                <TypeIcon className="w-3 h-3" style={{ color: meta.color }} />
+                {meta.entityLabel}
               </span>
               <span className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: event.projectColor }} />
-                {event.project}
+                <Clock className="w-3 h-3" />
+                {timestamp.toLocaleString()}
               </span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{event.fullTime}</span>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="w-4 h-4" style={{ color: "var(--c-texTer)" }} /></Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Description + Comments */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Description */}
-          <div className="rounded-xl p-5" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--c-texPri)" }}>Details</h3>
-            <p className="text-sm leading-relaxed" style={{ color: "var(--c-texSec)" }}>{event.description}</p>
-          </div>
-
-          {/* Comments */}
-          <div className="rounded-xl p-5" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
-            <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--c-texPri)" }}>Comments ({event.comments.length})</h3>
-            <div className="space-y-4">
-              {event.comments.map((c, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0" style={{ backgroundColor: c.color + "20", color: c.color }}>
-                    {c.avatar}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium" style={{ color: "var(--c-texPri)" }}>{c.user}</span>
-                      <span className="text-[10px]" style={{ color: "var(--c-texDis)" }}>{c.time}</span>
-                    </div>
-                    <p className="text-sm" style={{ color: "var(--c-texSec)" }}>{c.text}</p>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                    <ThumbsUp className="w-3 h-3" style={{ color: "var(--c-texDis)" }} />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            {/* Reply input */}
-            <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--c-borPri)" }}>
-              <div className="flex items-center gap-2">
-                <Input type="text" placeholder="Write a comment..." className="text-sm flex-1" />
-                <Button
-                  style={{ backgroundColor: "var(--c-bluTexAccPri)", color: "var(--c-bacPri)" }}
-                  size="sm"
-                >Reply</Button>
+      {/* Details grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-xl p-5 space-y-3" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
+          <h3 className="text-sm font-semibold" style={{ color: "var(--c-texPri)" }}>Event Details</h3>
+          <div className="space-y-2">
+            {[
+              { label: "Action", value: entry.action },
+              { label: "Entity Type", value: entry.entityType },
+              { label: "Entity ID", value: entry.entityId || "—" },
+              { label: "Actor", value: username },
+              { label: "Actor ID", value: entry.actorUserId },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex justify-between text-sm">
+                <span style={{ color: "var(--c-texTer)" }}>{label}</span>
+                <span className="font-mono text-xs" style={{ color: "var(--c-texSec)" }}>{value}</span>
               </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Related Tasks */}
-        <div className="lg:col-span-2 rounded-xl p-5" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
-          <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--c-texPri)" }}>Related Tasks</h3>
+        <div className="rounded-xl p-5 space-y-3" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
+          <h3 className="text-sm font-semibold" style={{ color: "var(--c-texPri)" }}>Trace Info</h3>
           <div className="space-y-2">
-            {event.relatedTasks.map((t, i) => {
-              const si = STATUS_ICON_MAP[t.status];
-              const SI = si.icon;
-              return (
-                <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer hover:bg-[var(--c-bacTer)]">
-                  <SI className="w-3.5 h-3.5 flex-shrink-0" style={{ color: si.color }} />
-                  <span className="text-sm flex-1" style={{ color: t.status === "done" ? "var(--c-texTer)" : "var(--c-texPri)", textDecoration: t.status === "done" ? "line-through" : "none" }}>{t.title}</span>
-                </div>
-              );
-            })}
+            {[
+              { label: "Correlation ID", value: entry.correlationId },
+              { label: "Timestamp (UTC)", value: timestamp.toISOString() },
+              { label: "Entry ID", value: entry.id },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <span className="text-xs" style={{ color: "var(--c-texTer)" }}>{label}</span>
+                <p className="font-mono text-xs mt-0.5 break-all" style={{ color: "var(--c-texSec)" }}>{value}</p>
+              </div>
+            ))}
+            {entry.additionalInfo && (
+              <div>
+                <span className="text-xs" style={{ color: "var(--c-texTer)" }}>Additional Info</span>
+                <p className="text-sm mt-0.5" style={{ color: "var(--c-texSec)" }}>{entry.additionalInfo}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

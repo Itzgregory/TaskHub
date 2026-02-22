@@ -40,6 +40,8 @@ export interface TodoItemDto {
   priority: Priority;
   tags: string[];
   dueDate?: string; // ISO datetime string
+  assignedToUserId?: string;
+  assignedAt?: string; // ISO datetime string
   isDeleted: boolean;
   isArchived: boolean;
   version: number;
@@ -56,6 +58,7 @@ export interface CreateTodoRequest {
   priority?: Priority;
   tags?: string[];
   dueDate?: string; // ISO datetime string
+  assignedToUserId?: string;
 }
 
 export interface CreateTodoResponse {
@@ -67,6 +70,8 @@ export interface CreateTodoResponse {
   priority: Priority;
   tags: string[];
   dueDate?: string;
+  assignedToUserId?: string;
+  assignedAt?: string;
   version: number;
   createdAt: string;
   eTag: string;
@@ -80,7 +85,8 @@ export interface UpdateTodoRequest {
   priority?: Priority;
   tags?: string[];
   dueDate?: string;
-  version: number; // Required for optimistic concurrency
+  expectedVersion: number; // Required for optimistic concurrency
+  assignedToUserId?: string;
 }
 
 export interface UpdateTodoResponse {
@@ -91,6 +97,8 @@ export interface UpdateTodoResponse {
   priority: Priority;
   tags: string[];
   dueDate?: string;
+  assignedToUserId?: string;
+  assignedAt?: string;
   version: number;
   updatedAt: string;
   eTag: string;
@@ -99,7 +107,7 @@ export interface UpdateTodoResponse {
 export interface ToggleStatusRequest {
   id: string;
   orgId: string;
-  version: number;
+  expectedVersion: number;
 }
 
 export interface ToggleStatusResponse {

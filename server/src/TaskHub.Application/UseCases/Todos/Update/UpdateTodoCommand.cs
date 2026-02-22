@@ -10,5 +10,6 @@ public record UpdateTodoCommand(
     Priority Priority,
     List<string>? Tags,
     DateTime? DueDate,
-    int ExpectedVersion
+    int ExpectedVersion,
+    Guid? AssignedToUserId = null
 );
