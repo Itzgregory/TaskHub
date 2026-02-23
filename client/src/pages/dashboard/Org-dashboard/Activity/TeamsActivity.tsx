@@ -123,13 +123,14 @@ export default function TeamActivity() {
             <span className="text-[10px]" style={{ color: "var(--c-texDis)" }}>
               {formatTimestamp(entry.timestamp)}
             </span>
+            {/* so this is the correlation ID. IT DOES NOT SHOW UP, BUT WHEN IT DOES, IT MAKES ITSELF USEFUL */}
             {entry.correlationId && (
               <span
                 className="text-[10px] font-mono"
                 style={{ color: "var(--c-texDis)" }}
                 title={`Correlation: ${entry.correlationId}`}
               >
-                #{entry.correlationId.slice(0, 8)}
+                {/* #{entry.correlationId.slice(0, 8)} */}
               </span>
             )}
           </div>
