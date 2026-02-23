@@ -7,7 +7,7 @@ import { Divider } from "@/components/auth/Divider";
 import { MobileLogo } from "@/components/auth/MobileLogo";
 import { useLogin } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +33,7 @@ export default function LoginPage() {
 
       // Navigate based on onboarding status
       if (response.onboardingCompleted) {
-        navigate({ to: "/dashboard/today" });
+        navigate({ to: "/dashboard/org/home" });
       } else {
         navigate({ to: "/auth/onboarding" });
       }

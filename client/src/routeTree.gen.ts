@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as R404RouteImport } from './routes/404'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardUpcomingRouteImport } from './routes/dashboard.upcoming'
@@ -17,20 +18,28 @@ import { Route as DashboardTaskRouteImport } from './routes/dashboard.task'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardSearchRouteImport } from './routes/dashboard.search'
 import { Route as DashboardProfileRouteImport } from './routes/dashboard.profile'
+import { Route as DashboardOrgRouteImport } from './routes/dashboard.org'
 import { Route as DashboardCompletedRouteImport } from './routes/dashboard.completed'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthOrgSelectionRouteImport } from './routes/auth.org-selection'
 import { Route as AuthOnboardingRouteImport } from './routes/auth.onboarding'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
-import { Route as DashboardProjectsProjectIdRouteImport } from './routes/dashboard.projects.$projectId'
 import { Route as DashboardOrgProjectsRouteImport } from './routes/dashboard.org.projects'
 import { Route as DashboardOrgMembersRouteImport } from './routes/dashboard.org.members'
 import { Route as DashboardOrgHomeRouteImport } from './routes/dashboard.org.home'
 import { Route as DashboardOrgActivityRouteImport } from './routes/dashboard.org.activity'
+import { Route as DashboardOrgProjectsIndexRouteImport } from './routes/dashboard.org.projects.index'
+import { Route as DashboardOrgMembersIndexRouteImport } from './routes/dashboard.org.members.index'
+import { Route as DashboardOrgActivityIndexRouteImport } from './routes/dashboard.org.activity.index'
 import { Route as DashboardOrgProjectsProjectIdRouteImport } from './routes/dashboard.org.projects.$projectId'
 import { Route as DashboardOrgMembersMemberIdRouteImport } from './routes/dashboard.org.members.$memberId'
 import { Route as DashboardOrgActivityActivityIdRouteImport } from './routes/dashboard.org.activity.$activityId'
 
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const R404Route = R404RouteImport.update({
   id: '/404',
   path: '/404',
@@ -42,39 +51,44 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardUpcomingRoute = DashboardUpcomingRouteImport.update({
-  id: '/dashboard/upcoming',
-  path: '/dashboard/upcoming',
-  getParentRoute: () => rootRouteImport,
+  id: '/upcoming',
+  path: '/upcoming',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardTodayRoute = DashboardTodayRouteImport.update({
-  id: '/dashboard/today',
-  path: '/dashboard/today',
-  getParentRoute: () => rootRouteImport,
+  id: '/today',
+  path: '/today',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardTaskRoute = DashboardTaskRouteImport.update({
-  id: '/dashboard/task',
-  path: '/dashboard/task',
-  getParentRoute: () => rootRouteImport,
+  id: '/task',
+  path: '/task',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
-  id: '/dashboard/settings',
-  path: '/dashboard/settings',
-  getParentRoute: () => rootRouteImport,
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSearchRoute = DashboardSearchRouteImport.update({
-  id: '/dashboard/search',
-  path: '/dashboard/search',
-  getParentRoute: () => rootRouteImport,
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardProfileRoute = DashboardProfileRouteImport.update({
-  id: '/dashboard/profile',
-  path: '/dashboard/profile',
-  getParentRoute: () => rootRouteImport,
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardOrgRoute = DashboardOrgRouteImport.update({
+  id: '/org',
+  path: '/org',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardCompletedRoute = DashboardCompletedRouteImport.update({
-  id: '/dashboard/completed',
-  path: '/dashboard/completed',
-  getParentRoute: () => rootRouteImport,
+  id: '/completed',
+  path: '/completed',
+  getParentRoute: () => DashboardRoute,
 } as any)
 const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/auth/signup',
@@ -96,32 +110,44 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardProjectsProjectIdRoute =
-  DashboardProjectsProjectIdRouteImport.update({
-    id: '/dashboard/projects/$projectId',
-    path: '/dashboard/projects/$projectId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const DashboardOrgProjectsRoute = DashboardOrgProjectsRouteImport.update({
-  id: '/dashboard/org/projects',
-  path: '/dashboard/org/projects',
-  getParentRoute: () => rootRouteImport,
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => DashboardOrgRoute,
 } as any)
 const DashboardOrgMembersRoute = DashboardOrgMembersRouteImport.update({
-  id: '/dashboard/org/members',
-  path: '/dashboard/org/members',
-  getParentRoute: () => rootRouteImport,
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => DashboardOrgRoute,
 } as any)
 const DashboardOrgHomeRoute = DashboardOrgHomeRouteImport.update({
-  id: '/dashboard/org/home',
-  path: '/dashboard/org/home',
-  getParentRoute: () => rootRouteImport,
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => DashboardOrgRoute,
 } as any)
 const DashboardOrgActivityRoute = DashboardOrgActivityRouteImport.update({
-  id: '/dashboard/org/activity',
-  path: '/dashboard/org/activity',
-  getParentRoute: () => rootRouteImport,
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => DashboardOrgRoute,
 } as any)
+const DashboardOrgProjectsIndexRoute =
+  DashboardOrgProjectsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardOrgProjectsRoute,
+  } as any)
+const DashboardOrgMembersIndexRoute =
+  DashboardOrgMembersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardOrgMembersRoute,
+  } as any)
+const DashboardOrgActivityIndexRoute =
+  DashboardOrgActivityIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => DashboardOrgActivityRoute,
+  } as any)
 const DashboardOrgProjectsProjectIdRoute =
   DashboardOrgProjectsProjectIdRouteImport.update({
     id: '/$projectId',
@@ -144,11 +170,13 @@ const DashboardOrgActivityActivityIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/404': typeof R404Route
+  '/dashboard': typeof DashboardRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/onboarding': typeof AuthOnboardingRoute
   '/auth/org-selection': typeof AuthOrgSelectionRoute
   '/auth/signup': typeof AuthSignupRoute
   '/dashboard/completed': typeof DashboardCompletedRoute
+  '/dashboard/org': typeof DashboardOrgRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/search': typeof DashboardSearchRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -159,43 +187,48 @@ export interface FileRoutesByFullPath {
   '/dashboard/org/home': typeof DashboardOrgHomeRoute
   '/dashboard/org/members': typeof DashboardOrgMembersRouteWithChildren
   '/dashboard/org/projects': typeof DashboardOrgProjectsRouteWithChildren
-  '/dashboard/projects/$projectId': typeof DashboardProjectsProjectIdRoute
   '/dashboard/org/activity/$activityId': typeof DashboardOrgActivityActivityIdRoute
   '/dashboard/org/members/$memberId': typeof DashboardOrgMembersMemberIdRoute
   '/dashboard/org/projects/$projectId': typeof DashboardOrgProjectsProjectIdRoute
+  '/dashboard/org/activity/': typeof DashboardOrgActivityIndexRoute
+  '/dashboard/org/members/': typeof DashboardOrgMembersIndexRoute
+  '/dashboard/org/projects/': typeof DashboardOrgProjectsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/404': typeof R404Route
+  '/dashboard': typeof DashboardRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/onboarding': typeof AuthOnboardingRoute
   '/auth/org-selection': typeof AuthOrgSelectionRoute
   '/auth/signup': typeof AuthSignupRoute
   '/dashboard/completed': typeof DashboardCompletedRoute
+  '/dashboard/org': typeof DashboardOrgRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/search': typeof DashboardSearchRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/task': typeof DashboardTaskRoute
   '/dashboard/today': typeof DashboardTodayRoute
   '/dashboard/upcoming': typeof DashboardUpcomingRoute
-  '/dashboard/org/activity': typeof DashboardOrgActivityRouteWithChildren
   '/dashboard/org/home': typeof DashboardOrgHomeRoute
-  '/dashboard/org/members': typeof DashboardOrgMembersRouteWithChildren
-  '/dashboard/org/projects': typeof DashboardOrgProjectsRouteWithChildren
-  '/dashboard/projects/$projectId': typeof DashboardProjectsProjectIdRoute
   '/dashboard/org/activity/$activityId': typeof DashboardOrgActivityActivityIdRoute
   '/dashboard/org/members/$memberId': typeof DashboardOrgMembersMemberIdRoute
   '/dashboard/org/projects/$projectId': typeof DashboardOrgProjectsProjectIdRoute
+  '/dashboard/org/activity': typeof DashboardOrgActivityIndexRoute
+  '/dashboard/org/members': typeof DashboardOrgMembersIndexRoute
+  '/dashboard/org/projects': typeof DashboardOrgProjectsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/404': typeof R404Route
+  '/dashboard': typeof DashboardRouteWithChildren
   '/auth/login': typeof AuthLoginRoute
   '/auth/onboarding': typeof AuthOnboardingRoute
   '/auth/org-selection': typeof AuthOrgSelectionRoute
   '/auth/signup': typeof AuthSignupRoute
   '/dashboard/completed': typeof DashboardCompletedRoute
+  '/dashboard/org': typeof DashboardOrgRouteWithChildren
   '/dashboard/profile': typeof DashboardProfileRoute
   '/dashboard/search': typeof DashboardSearchRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
@@ -206,21 +239,25 @@ export interface FileRoutesById {
   '/dashboard/org/home': typeof DashboardOrgHomeRoute
   '/dashboard/org/members': typeof DashboardOrgMembersRouteWithChildren
   '/dashboard/org/projects': typeof DashboardOrgProjectsRouteWithChildren
-  '/dashboard/projects/$projectId': typeof DashboardProjectsProjectIdRoute
   '/dashboard/org/activity/$activityId': typeof DashboardOrgActivityActivityIdRoute
   '/dashboard/org/members/$memberId': typeof DashboardOrgMembersMemberIdRoute
   '/dashboard/org/projects/$projectId': typeof DashboardOrgProjectsProjectIdRoute
+  '/dashboard/org/activity/': typeof DashboardOrgActivityIndexRoute
+  '/dashboard/org/members/': typeof DashboardOrgMembersIndexRoute
+  '/dashboard/org/projects/': typeof DashboardOrgProjectsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/404'
+    | '/dashboard'
     | '/auth/login'
     | '/auth/onboarding'
     | '/auth/org-selection'
     | '/auth/signup'
     | '/dashboard/completed'
+    | '/dashboard/org'
     | '/dashboard/profile'
     | '/dashboard/search'
     | '/dashboard/settings'
@@ -231,42 +268,47 @@ export interface FileRouteTypes {
     | '/dashboard/org/home'
     | '/dashboard/org/members'
     | '/dashboard/org/projects'
-    | '/dashboard/projects/$projectId'
     | '/dashboard/org/activity/$activityId'
     | '/dashboard/org/members/$memberId'
     | '/dashboard/org/projects/$projectId'
+    | '/dashboard/org/activity/'
+    | '/dashboard/org/members/'
+    | '/dashboard/org/projects/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/404'
+    | '/dashboard'
     | '/auth/login'
     | '/auth/onboarding'
     | '/auth/org-selection'
     | '/auth/signup'
     | '/dashboard/completed'
+    | '/dashboard/org'
     | '/dashboard/profile'
     | '/dashboard/search'
     | '/dashboard/settings'
     | '/dashboard/task'
     | '/dashboard/today'
     | '/dashboard/upcoming'
-    | '/dashboard/org/activity'
     | '/dashboard/org/home'
-    | '/dashboard/org/members'
-    | '/dashboard/org/projects'
-    | '/dashboard/projects/$projectId'
     | '/dashboard/org/activity/$activityId'
     | '/dashboard/org/members/$memberId'
     | '/dashboard/org/projects/$projectId'
+    | '/dashboard/org/activity'
+    | '/dashboard/org/members'
+    | '/dashboard/org/projects'
   id:
     | '__root__'
     | '/'
     | '/404'
+    | '/dashboard'
     | '/auth/login'
     | '/auth/onboarding'
     | '/auth/org-selection'
     | '/auth/signup'
     | '/dashboard/completed'
+    | '/dashboard/org'
     | '/dashboard/profile'
     | '/dashboard/search'
     | '/dashboard/settings'
@@ -277,35 +319,33 @@ export interface FileRouteTypes {
     | '/dashboard/org/home'
     | '/dashboard/org/members'
     | '/dashboard/org/projects'
-    | '/dashboard/projects/$projectId'
     | '/dashboard/org/activity/$activityId'
     | '/dashboard/org/members/$memberId'
     | '/dashboard/org/projects/$projectId'
+    | '/dashboard/org/activity/'
+    | '/dashboard/org/members/'
+    | '/dashboard/org/projects/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   R404Route: typeof R404Route
+  DashboardRoute: typeof DashboardRouteWithChildren
   AuthLoginRoute: typeof AuthLoginRoute
   AuthOnboardingRoute: typeof AuthOnboardingRoute
   AuthOrgSelectionRoute: typeof AuthOrgSelectionRoute
   AuthSignupRoute: typeof AuthSignupRoute
-  DashboardCompletedRoute: typeof DashboardCompletedRoute
-  DashboardProfileRoute: typeof DashboardProfileRoute
-  DashboardSearchRoute: typeof DashboardSearchRoute
-  DashboardSettingsRoute: typeof DashboardSettingsRoute
-  DashboardTaskRoute: typeof DashboardTaskRoute
-  DashboardTodayRoute: typeof DashboardTodayRoute
-  DashboardUpcomingRoute: typeof DashboardUpcomingRoute
-  DashboardOrgActivityRoute: typeof DashboardOrgActivityRouteWithChildren
-  DashboardOrgHomeRoute: typeof DashboardOrgHomeRoute
-  DashboardOrgMembersRoute: typeof DashboardOrgMembersRouteWithChildren
-  DashboardOrgProjectsRoute: typeof DashboardOrgProjectsRouteWithChildren
-  DashboardProjectsProjectIdRoute: typeof DashboardProjectsProjectIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/404': {
       id: '/404'
       path: '/404'
@@ -322,52 +362,59 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/upcoming': {
       id: '/dashboard/upcoming'
-      path: '/dashboard/upcoming'
+      path: '/upcoming'
       fullPath: '/dashboard/upcoming'
       preLoaderRoute: typeof DashboardUpcomingRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/today': {
       id: '/dashboard/today'
-      path: '/dashboard/today'
+      path: '/today'
       fullPath: '/dashboard/today'
       preLoaderRoute: typeof DashboardTodayRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/task': {
       id: '/dashboard/task'
-      path: '/dashboard/task'
+      path: '/task'
       fullPath: '/dashboard/task'
       preLoaderRoute: typeof DashboardTaskRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/settings': {
       id: '/dashboard/settings'
-      path: '/dashboard/settings'
+      path: '/settings'
       fullPath: '/dashboard/settings'
       preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/search': {
       id: '/dashboard/search'
-      path: '/dashboard/search'
+      path: '/search'
       fullPath: '/dashboard/search'
       preLoaderRoute: typeof DashboardSearchRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/profile': {
       id: '/dashboard/profile'
-      path: '/dashboard/profile'
+      path: '/profile'
       fullPath: '/dashboard/profile'
       preLoaderRoute: typeof DashboardProfileRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/org': {
+      id: '/dashboard/org'
+      path: '/org'
+      fullPath: '/dashboard/org'
+      preLoaderRoute: typeof DashboardOrgRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/dashboard/completed': {
       id: '/dashboard/completed'
-      path: '/dashboard/completed'
+      path: '/completed'
       fullPath: '/dashboard/completed'
       preLoaderRoute: typeof DashboardCompletedRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardRoute
     }
     '/auth/signup': {
       id: '/auth/signup'
@@ -397,40 +444,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/projects/$projectId': {
-      id: '/dashboard/projects/$projectId'
-      path: '/dashboard/projects/$projectId'
-      fullPath: '/dashboard/projects/$projectId'
-      preLoaderRoute: typeof DashboardProjectsProjectIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard/org/projects': {
       id: '/dashboard/org/projects'
-      path: '/dashboard/org/projects'
+      path: '/projects'
       fullPath: '/dashboard/org/projects'
       preLoaderRoute: typeof DashboardOrgProjectsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardOrgRoute
     }
     '/dashboard/org/members': {
       id: '/dashboard/org/members'
-      path: '/dashboard/org/members'
+      path: '/members'
       fullPath: '/dashboard/org/members'
       preLoaderRoute: typeof DashboardOrgMembersRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardOrgRoute
     }
     '/dashboard/org/home': {
       id: '/dashboard/org/home'
-      path: '/dashboard/org/home'
+      path: '/home'
       fullPath: '/dashboard/org/home'
       preLoaderRoute: typeof DashboardOrgHomeRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardOrgRoute
     }
     '/dashboard/org/activity': {
       id: '/dashboard/org/activity'
-      path: '/dashboard/org/activity'
+      path: '/activity'
       fullPath: '/dashboard/org/activity'
       preLoaderRoute: typeof DashboardOrgActivityRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof DashboardOrgRoute
+    }
+    '/dashboard/org/projects/': {
+      id: '/dashboard/org/projects/'
+      path: '/'
+      fullPath: '/dashboard/org/projects/'
+      preLoaderRoute: typeof DashboardOrgProjectsIndexRouteImport
+      parentRoute: typeof DashboardOrgProjectsRoute
+    }
+    '/dashboard/org/members/': {
+      id: '/dashboard/org/members/'
+      path: '/'
+      fullPath: '/dashboard/org/members/'
+      preLoaderRoute: typeof DashboardOrgMembersIndexRouteImport
+      parentRoute: typeof DashboardOrgMembersRoute
+    }
+    '/dashboard/org/activity/': {
+      id: '/dashboard/org/activity/'
+      path: '/'
+      fullPath: '/dashboard/org/activity/'
+      preLoaderRoute: typeof DashboardOrgActivityIndexRouteImport
+      parentRoute: typeof DashboardOrgActivityRoute
     }
     '/dashboard/org/projects/$projectId': {
       id: '/dashboard/org/projects/$projectId'
@@ -458,10 +519,12 @@ declare module '@tanstack/react-router' {
 
 interface DashboardOrgActivityRouteChildren {
   DashboardOrgActivityActivityIdRoute: typeof DashboardOrgActivityActivityIdRoute
+  DashboardOrgActivityIndexRoute: typeof DashboardOrgActivityIndexRoute
 }
 
 const DashboardOrgActivityRouteChildren: DashboardOrgActivityRouteChildren = {
   DashboardOrgActivityActivityIdRoute: DashboardOrgActivityActivityIdRoute,
+  DashboardOrgActivityIndexRoute: DashboardOrgActivityIndexRoute,
 }
 
 const DashboardOrgActivityRouteWithChildren =
@@ -469,10 +532,12 @@ const DashboardOrgActivityRouteWithChildren =
 
 interface DashboardOrgMembersRouteChildren {
   DashboardOrgMembersMemberIdRoute: typeof DashboardOrgMembersMemberIdRoute
+  DashboardOrgMembersIndexRoute: typeof DashboardOrgMembersIndexRoute
 }
 
 const DashboardOrgMembersRouteChildren: DashboardOrgMembersRouteChildren = {
   DashboardOrgMembersMemberIdRoute: DashboardOrgMembersMemberIdRoute,
+  DashboardOrgMembersIndexRoute: DashboardOrgMembersIndexRoute,
 }
 
 const DashboardOrgMembersRouteWithChildren =
@@ -480,34 +545,69 @@ const DashboardOrgMembersRouteWithChildren =
 
 interface DashboardOrgProjectsRouteChildren {
   DashboardOrgProjectsProjectIdRoute: typeof DashboardOrgProjectsProjectIdRoute
+  DashboardOrgProjectsIndexRoute: typeof DashboardOrgProjectsIndexRoute
 }
 
 const DashboardOrgProjectsRouteChildren: DashboardOrgProjectsRouteChildren = {
   DashboardOrgProjectsProjectIdRoute: DashboardOrgProjectsProjectIdRoute,
+  DashboardOrgProjectsIndexRoute: DashboardOrgProjectsIndexRoute,
 }
 
 const DashboardOrgProjectsRouteWithChildren =
   DashboardOrgProjectsRoute._addFileChildren(DashboardOrgProjectsRouteChildren)
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  R404Route: R404Route,
-  AuthLoginRoute: AuthLoginRoute,
-  AuthOnboardingRoute: AuthOnboardingRoute,
-  AuthOrgSelectionRoute: AuthOrgSelectionRoute,
-  AuthSignupRoute: AuthSignupRoute,
+interface DashboardOrgRouteChildren {
+  DashboardOrgActivityRoute: typeof DashboardOrgActivityRouteWithChildren
+  DashboardOrgHomeRoute: typeof DashboardOrgHomeRoute
+  DashboardOrgMembersRoute: typeof DashboardOrgMembersRouteWithChildren
+  DashboardOrgProjectsRoute: typeof DashboardOrgProjectsRouteWithChildren
+}
+
+const DashboardOrgRouteChildren: DashboardOrgRouteChildren = {
+  DashboardOrgActivityRoute: DashboardOrgActivityRouteWithChildren,
+  DashboardOrgHomeRoute: DashboardOrgHomeRoute,
+  DashboardOrgMembersRoute: DashboardOrgMembersRouteWithChildren,
+  DashboardOrgProjectsRoute: DashboardOrgProjectsRouteWithChildren,
+}
+
+const DashboardOrgRouteWithChildren = DashboardOrgRoute._addFileChildren(
+  DashboardOrgRouteChildren,
+)
+
+interface DashboardRouteChildren {
+  DashboardCompletedRoute: typeof DashboardCompletedRoute
+  DashboardOrgRoute: typeof DashboardOrgRouteWithChildren
+  DashboardProfileRoute: typeof DashboardProfileRoute
+  DashboardSearchRoute: typeof DashboardSearchRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardTaskRoute: typeof DashboardTaskRoute
+  DashboardTodayRoute: typeof DashboardTodayRoute
+  DashboardUpcomingRoute: typeof DashboardUpcomingRoute
+}
+
+const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardCompletedRoute: DashboardCompletedRoute,
+  DashboardOrgRoute: DashboardOrgRouteWithChildren,
   DashboardProfileRoute: DashboardProfileRoute,
   DashboardSearchRoute: DashboardSearchRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardTaskRoute: DashboardTaskRoute,
   DashboardTodayRoute: DashboardTodayRoute,
   DashboardUpcomingRoute: DashboardUpcomingRoute,
-  DashboardOrgActivityRoute: DashboardOrgActivityRouteWithChildren,
-  DashboardOrgHomeRoute: DashboardOrgHomeRoute,
-  DashboardOrgMembersRoute: DashboardOrgMembersRouteWithChildren,
-  DashboardOrgProjectsRoute: DashboardOrgProjectsRouteWithChildren,
-  DashboardProjectsProjectIdRoute: DashboardProjectsProjectIdRoute,
+}
+
+const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
+  DashboardRouteChildren,
+)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  R404Route: R404Route,
+  DashboardRoute: DashboardRouteWithChildren,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthOnboardingRoute: AuthOnboardingRoute,
+  AuthOrgSelectionRoute: AuthOrgSelectionRoute,
+  AuthSignupRoute: AuthSignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

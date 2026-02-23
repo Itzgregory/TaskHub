@@ -30,16 +30,43 @@ public abstract class BaseApiController : ControllerBase
         return base.NoContent();
     }
 
+    /// <summary>
+    /// Returns a 400 Bad Request using Result failure — ProblemDetails format.
+    /// </summary>
     protected IActionResult BadRequest<T>(Result<T> result)
     {
-        return base.BadRequest(new
+        return base.BadRequest(CreateProblemDetails(
+            title: "Bad Request",
+            detail: result.ErrorMessage ?? "An error occurred.",
+            code: result.ErrorCode
+        ));
+    }
+
+    /// <summary>
+    /// Returns a 400 Bad Request from a plain error message — ProblemDetails format.
+    /// </summary>
+    protected IActionResult BadRequest(string detail, string code = "BAD_REQUEST")
+    {
+        return base.BadRequest(CreateProblemDetails(
+            title: "Bad Request",
+            detail: detail,
+            code: code
+        ));
+    }
+
+    private object CreateProblemDetails(string title, string detail, string? code = null)
+    {
+        var correlationId = HttpContext.Items["CorrelationId"]?.ToString() ?? "unknown";
+
+        return new
         {
-            success = false,
-            error = new
-            {
-                code = result.ErrorCode,
-                message = result.ErrorMessage
-            }
-        });
+            type = "https://tools.ietf.org/html/rfc7807",
+            title,
+            status = 400,
+            detail,
+            code = code ?? "BAD_REQUEST",
+            instance = HttpContext.Request.Path.ToString(),
+            correlationId
+        };
     }
 }

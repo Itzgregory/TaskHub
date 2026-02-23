@@ -3,7 +3,7 @@ import { FEATURE_PILLS } from "@/lib/constants/landing";
 
 export function FeaturePills() {
   return (
-    <div className="mt-10 flex flex-wrap justify-center gap-2">
+    <div className="mt-5 mb-10 flex flex-wrap justify-center gap-2">
       {FEATURE_PILLS.map(({ Icon, label }) => (
         <Badge
           key={label}

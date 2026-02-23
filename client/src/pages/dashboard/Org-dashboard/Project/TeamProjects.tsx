@@ -1,12 +1,9 @@
 import { useMemo, useState } from "react";
 import {
-  FolderKanban, Search, MoreHorizontal,
-  Users, CheckCircle2, ArrowUpRight,
+  FolderKanban, Search, ArrowUpRight,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/dashboard/AppLayout";
-import { ProgressBar } from "@/components/features/ProgressBar";
 import { EmptyState } from "@/components/features/EmptyState";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth/AuthContext";
@@ -15,27 +12,19 @@ import { STATUS_STYLE } from "@/lib/utils/org-constants";
 export default function TeamProjects() {
   const { organisations } = useAuth();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // For now, all organisations are treated as active “projects”
   const projects = useMemo(
     () =>
       organisations.map(org => ({
         id: org.orgId,
         name: org.orgName,
-        description: "",
         status: "active" as const,
-        members: 0,
-        totalTasks: 0,
-        completedTasks: 0,
-        updatedAt: new Date(org.joinedAt).toLocaleDateString(),
-        color: "#6366f1",
+        joinedAt: new Date(org.joinedAt).toLocaleDateString(),
       })),
     [organisations]
   );
 
   const filtered = projects.filter(p => {
-    if (statusFilter !== "all" && p.status !== statusFilter) return false;
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -54,23 +43,11 @@ export default function TeamProjects() {
             className="pl-9 text-sm"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="th-select"
-          >
-            <option value="all">All statuses</option>
-            <option value="active">Active</option>
-          </select>
-          {/* New workspace creation handled on org selection page */}
-        </div>
       </div>
 
       {/* Project cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filtered.map(p => {
-          const progress = Math.round((p.completedTasks / p.totalTasks) * 100);
           const sts = STATUS_STYLE[p.status];
           return (
             <Link
@@ -83,8 +60,16 @@ export default function TeamProjects() {
               {/* Header */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.color }} />
-                  <h3 className="text-sm font-semibold" style={{ color: "var(--c-texPri)" }}>{p.name}</h3>
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold"
+                    style={{ backgroundColor: "var(--c-bluBacSec)", color: "var(--c-bluTexAccPri)" }}
+                  >
+                    {p.name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold" style={{ color: "var(--c-texPri)" }}>{p.name}</h3>
+                    <span className="text-[10px]" style={{ color: "var(--c-texDis)" }}>Joined {p.joinedAt}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
@@ -93,41 +78,16 @@ export default function TeamProjects() {
                   >
                     {sts.label}
                   </span>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <MoreHorizontal className="w-3.5 h-3.5" style={{ color: "var(--c-texTer)" }} />
-                  </Button>
+                  <ArrowUpRight
+                    className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ color: "var(--c-bluTexAccPri)" }}
+                  />
                 </div>
               </div>
 
-              {/* Description */}
-              <p className="text-xs mb-4 line-clamp-2" style={{ color: "var(--c-texTer)" }}>{p.description}</p>
-
-              {/* Progress */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs" style={{ color: "var(--c-texTer)" }}>Progress</span>
-                  <span className="text-xs font-mono" style={{ color: "var(--c-texSec)" }}>{progress}%</span>
-                </div>
-                <ProgressBar value={progress} color={p.color} />
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <Users className="w-3 h-3" style={{ color: "var(--c-texDis)" }} />
-                    <span className="text-xs" style={{ color: "var(--c-texTer)" }}>{p.members}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3 h-3" style={{ color: "var(--c-texDis)" }} />
-                    <span className="text-xs" style={{ color: "var(--c-texTer)" }}>{p.completedTasks}/{p.totalTasks}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px]" style={{ color: "var(--c-texDis)" }}>{p.updatedAt}</span>
-                  <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--c-bluTexAccPri)" }} />
-                </div>
-              </div>
+              <p className="text-xs mt-3" style={{ color: "var(--c-texTer)" }}>
+                View tasks and manage your team's work in this workspace.
+              </p>
             </Link>
           );
         })}

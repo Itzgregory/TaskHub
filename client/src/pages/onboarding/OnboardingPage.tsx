@@ -10,7 +10,7 @@ import { PreferencesStep } from "@/components/onboarding/PreferencesStep";
 import { OnboardingLayout } from "@/components/layout/onboarding/OnboardingLayout";
 import { useCompleteOnboarding } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 
 const STEP_COMPONENTS = [ProfileStep, WorkspaceStep, PreferencesStep];
 

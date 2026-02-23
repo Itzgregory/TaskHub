@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StoreProvider } from "../lib/store";
 import { ThemeProvider } from "../lib/theme-provider";
 import { AuthProvider } from "../lib/auth/AuthContext";
+import { AuthGuard } from "../components/auth/AuthGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,7 +31,9 @@ function RootComponent() {
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <Outlet />
+              <AuthGuard>
+                <Outlet />
+              </AuthGuard>
               {import.meta.env.MODE === "development" && <TanStackRouterDevtools />}
             </TooltipProvider>
           </ThemeProvider>

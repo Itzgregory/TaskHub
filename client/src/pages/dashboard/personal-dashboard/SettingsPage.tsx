@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { useExportTodos, useImportTodos } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 import { useRef, useState } from "react";
 
 export default function SettingsPage() {

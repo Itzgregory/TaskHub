@@ -5,25 +5,11 @@ import { mapTodoDtoToTask } from "@/lib/api/mappers";
 import { TaskFormModal } from "@/components/features/TaskFormModal";
 import { getTodayStr } from "@/lib/utils/tasks";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 import type { Task } from "@/lib/types";
+import { getInitials } from "@/lib/utils/getInitials";
+import { PRIORITY_COLOR } from "@/lib/utils/priorityColours";
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function getInitials(name: string): string {
-    const parts = name.trim().split(/[\s._-]+/);
-    return parts.length >= 2
-        ? (parts[0][0] + parts[1][0]).toUpperCase()
-        : name.slice(0, 2).toUpperCase();
-}
-
-const PRIORITY_COLOR: Record<string, string> = {
-    urgent: "var(--c-redTexAccPri)",
-    high: "var(--c-oraTexAccPri)",
-    medium: "var(--c-yelTexAccPri)",
-    low: "var(--c-greTexAccPri)",
-    none: "var(--c-texDis)",
-};
 
 // ── KanbanCard ────────────────────────────────────────────────────────────────
 

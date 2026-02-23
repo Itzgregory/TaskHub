@@ -86,7 +86,7 @@ public class OrganisationsController : BaseApiController
     public async Task<IActionResult> AddMember(Guid orgId, [FromBody] AddMemberCommand command)
     {
         if (orgId != command.OrgId)
-            return BadRequest(new { success = false, error = "Organisation ID mismatch" });
+            return BadRequest("Organisation ID mismatch");
 
         var result = await _addMemberHandler.HandleAsync(command);
 
@@ -112,7 +112,7 @@ public class OrganisationsController : BaseApiController
     public async Task<IActionResult> ChangeRole(Guid orgId, Guid userId, [FromBody] ChangeRoleCommand command)
     {
         if (orgId != command.OrgId || userId != command.UserId)
-            return BadRequest(new { success = false, error = "ID mismatch" });
+            return BadRequest("ID mismatch");
 
         var result = await _changeRoleHandler.HandleAsync(command);
 

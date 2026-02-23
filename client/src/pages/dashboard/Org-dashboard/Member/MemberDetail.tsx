@@ -1,184 +1,228 @@
 import {
-  ArrowLeft, Mail, Calendar, Clock, CheckCircle2,
-  FolderKanban, BarChart3, MessageSquare, MoreHorizontal,
-  TrendingUp,
+  ArrowLeft, Calendar, Clock, CheckCircle2, Circle, AlertCircle,
+  Users, MoreHorizontal,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/dashboard/AppLayout";
 import { ProgressBar } from "@/components/features/ProgressBar";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "@tanstack/react-router";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useOrgMembers, useTodos } from "@/lib/api/hooks";
+import { mapTodoDtoToTask } from "@/lib/api/mappers";
 import { ROLE_META } from "@/lib/utils/org-constants";
+import { getTodayStr } from "@/lib/utils/tasks";
+import type { UserRole } from "@/lib/api/types";
+import { getInitials } from "@/lib/utils/getInitials";
+import { PRIORITY_COLOR } from "@/lib/utils/priorityColours";
 
-interface MemberData {
-  id: string; name: string; email: string; avatar: string; color: string;
-  role: "owner" | "admin" | "member" | "viewer";
-  status: "active" | "invited" | "inactive";
-  department: string; joinedAt: string; lastActive: string;
-  tasksCompleted: number; tasksInProgress: number; tasksTodo: number;
-  projects: { name: string; color: string; role: string }[];
-  recentActivity: { action: string; target: string; time: string }[];
-  stats: { label: string; value: string }[];
+function mapRoleToUi(role: UserRole) {
+  return role === "OrgAdmin" ? "admin" : "member" as const;
 }
-
-const MEMBERS_DATA: Record<string, MemberData> = {
-  "1": {
-    id: "1", name: "Alex Johnson", email: "alex@taskhub.app", avatar: "AJ", color: "#8b5cf6",
-    role: "owner", status: "active", department: "Engineering",
-    joinedAt: "Oct 12, 2023", lastActive: "Now",
-    tasksCompleted: 143, tasksInProgress: 8, tasksTodo: 5,
-    projects: [
-      { name: "Product Redesign", color: "#6366f1", role: "Owner" },
-      { name: "API Infrastructure", color: "#3b82f6", role: "Lead" },
-      { name: "Mobile App v2", color: "#f59e0b", role: "Contributor" },
-    ],
-    recentActivity: [
-      { action: "completed", target: "Sprint planning doc", time: "10m ago" },
-      { action: "commented on", target: "API rate limiting spec", time: "1h ago" },
-      { action: "created", target: "Q1 roadmap review", time: "3h ago" },
-      { action: "moved", target: "Auth refactor → Done", time: "5h ago" },
-      { action: "assigned", target: "SSO integration to DevOps", time: "Yesterday" },
-    ],
-    stats: [
-      { label: "Avg. tasks/week", value: "12" },
-      { label: "On-time rate", value: "94%" },
-      { label: "Comments", value: "287" },
-      { label: "Reviews given", value: "63" },
-    ],
-  },
-  "2": {
-    id: "2", name: "Sarah Chen", email: "sarah@taskhub.app", avatar: "SC", color: "#6366f1",
-    role: "admin", status: "active", department: "Design",
-    joinedAt: "Nov 3, 2023", lastActive: "2m ago",
-    tasksCompleted: 98, tasksInProgress: 5, tasksTodo: 3,
-    projects: [
-      { name: "Product Redesign", color: "#6366f1", role: "Lead" },
-      { name: "Design System v3", color: "#8b5cf6", role: "Owner" },
-    ],
-    recentActivity: [
-      { action: "completed", target: "Design system audit", time: "2m ago" },
-      { action: "uploaded", target: "Brand guidelines v3.pdf", time: "4h ago" },
-      { action: "commented on", target: "Icon set revision", time: "6h ago" },
-      { action: "created", target: "Component library spec", time: "Yesterday" },
-    ],
-    stats: [
-      { label: "Avg. tasks/week", value: "9" },
-      { label: "On-time rate", value: "97%" },
-      { label: "Comments", value: "194" },
-      { label: "Reviews given", value: "42" },
-    ],
-  },
-};
-
-const fallbackMember = MEMBERS_DATA["1"];
-
-
 
 export default function MemberDetail() {
   const { memberId } = useParams({ from: "/dashboard/org/members/$memberId" });
-  const member = MEMBERS_DATA[memberId || ""] || fallbackMember;
-  const roleMeta = ROLE_META[member.role];
+  const { activeOrg, user } = useAuth();
+  const orgId = activeOrg?.orgId;
+  const today = getTodayStr();
+
+  const { data: membersData, isLoading: loadingMembers } = useOrgMembers(orgId);
+  const { data: openData, isLoading: loadingOpen } = useTodos({ orgId: orgId ?? "", status: "Open", pageSize: 100 });
+  const { data: doneData, isLoading: loadingDone } = useTodos({ orgId: orgId ?? "", status: "Done", pageSize: 100 });
+
+  const members = membersData?.members ?? [];
+  const member = members.find(m => m.userId === memberId);
+
+  const allOpen = (openData?.todos.items ?? []).map(dto => mapTodoDtoToTask(dto, orgId ?? ""));
+  const allDone = (doneData?.todos.items ?? []).map(dto => mapTodoDtoToTask(dto, orgId ?? ""));
+
+  const memberOpen = allOpen.filter(t => t.assignedToUserId === memberId);
+  const memberDone = allDone.filter(t => t.assignedToUserId === memberId);
+  const memberOverdue = memberOpen.filter(t => t.dueDate && t.dueDate < today);
+  const memberTasks = [...memberOpen, ...memberDone];
+  const totalTasks = memberTasks.length;
+
+  const isLoading = loadingMembers || loadingOpen || loadingDone;
+  const isSelf = memberId === user?.userId;
+
+  if (isLoading) {
+    return (
+      <AppLayout title="Member" subtitle="Loading...">
+        <div className="flex items-center justify-center py-16">
+          <span className="text-sm" style={{ color: "var(--c-texTer)" }}>Loading member…</span>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (!member) {
+    return (
+      <AppLayout title="Member not found" subtitle="">
+        <Link to="/dashboard/org/members" className="inline-flex items-center gap-1.5 text-xs font-medium mb-6 hover:underline" style={{ color: "var(--c-bluTexAccPri)" }}>
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Members
+        </Link>
+        <p className="text-sm" style={{ color: "var(--c-texTer)" }}>This member could not be found in the current organisation.</p>
+      </AppLayout>
+    );
+  }
+
+  const uiRole = mapRoleToUi(member.role);
+  const roleMeta = ROLE_META[uiRole];
   const RoleIcon = roleMeta.icon;
-  const totalTasks = member.tasksCompleted + member.tasksInProgress + member.tasksTodo;
 
   return (
-    <AppLayout title={member.name} subtitle="Member profile">
-      {/* Back link */}
-      <Link to="/dashboard/org/members" className="inline-flex items-center gap-1.5 text-xs font-medium mb-6 hover:underline" style={{ color: "var(--c-bluTexAccPri)" }}>
+    <AppLayout title={member.username} subtitle="Member profile">
+      <Link
+        to="/dashboard/org/members"
+        className="inline-flex items-center gap-1.5 text-xs font-medium mb-6 hover:underline"
+        style={{ color: "var(--c-bluTexAccPri)" }}
+      >
         <ArrowLeft className="w-3.5 h-3.5" /> Back to Members
       </Link>
 
       {/* Profile header */}
       <div className="rounded-xl p-5 mb-6" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0" style={{ backgroundColor: member.color + "20", color: member.color }}>
-            {member.avatar}
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0"
+            style={{ backgroundColor: "var(--c-bluBacSec)", color: "var(--c-bluTexAccPri)" }}
+          >
+            {getInitials(member.username)}
           </div>
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <h2 className="text-lg font-semibold" style={{ color: "var(--c-texPri)" }}>{member.name}</h2>
-              <span className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: member.color + "15", color: roleMeta.color }}>
+              <h2 className="text-lg font-semibold" style={{ color: "var(--c-texPri)" }}>
+                {member.username}
+                {isSelf && <span className="text-sm ml-1" style={{ color: "var(--c-texTer)" }}>(you)</span>}
+              </h2>
+              <span
+                className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: "var(--c-bluBacSec)", color: roleMeta.color }}
+              >
                 <RoleIcon className="w-3 h-3" />{roleMeta.label}
               </span>
-              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: member.status === "active" ? "var(--c-greTexAccPri)" : "var(--c-texDis)" }} />
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "var(--c-greTexAccPri)" }} />
             </div>
             <div className="flex flex-wrap items-center gap-4 text-xs" style={{ color: "var(--c-texTer)" }}>
-              <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{member.email}</span>
-              <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />Joined {member.joinedAt}</span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Active {member.lastActive}</span>
+              {member.joinedAt && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  Joined {new Date(member.joinedAt).toLocaleDateString()}
+                </span>
+              )}
+              <span className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                {activeOrg?.orgName}
+              </span>
             </div>
-            <span className="inline-block text-xs px-2 py-0.5 rounded-full mt-2" style={{ backgroundColor: "var(--c-bacTer)", color: "var(--c-texSec)" }}>{member.department}</span>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 self-start"><MoreHorizontal className="w-4 h-4" style={{ color: "var(--c-texTer)" }} /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 self-start">
+            <MoreHorizontal className="w-4 h-4" style={{ color: "var(--c-texTer)" }} />
+          </Button>
         </div>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {member.stats.map(s => (
-          <div key={s.label} className="rounded-xl p-4 text-center" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
-            <div className="text-xl font-semibold mb-0.5" style={{ color: "var(--c-texPri)" }}>{s.value}</div>
+        {[
+          { label: "Open Tasks", value: memberOpen.length, color: "var(--c-bluTexAccPri)" },
+          { label: "Completed", value: memberDone.length, color: "var(--c-greTexAccPri)" },
+          { label: "Overdue", value: memberOverdue.length, color: "var(--c-redTexAccPri)" },
+          { label: "Total Assigned", value: totalTasks, color: "var(--c-texPri)" },
+        ].map(s => (
+          <div
+            key={s.label}
+            className="rounded-xl p-4 text-center"
+            style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}
+          >
+            <div className="text-xl font-semibold mb-0.5" style={{ color: s.color }}>{s.value}</div>
             <div className="text-[10px]" style={{ color: "var(--c-texTer)" }}>{s.label}</div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Task breakdown + Projects */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Task breakdown */}
+        {/* Task breakdown */}
+        <div className="lg:col-span-2">
           <div className="rounded-xl p-5" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
             <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--c-texPri)" }}>Task Breakdown</h3>
-            <div className="space-y-3">
-              {[
-                { label: "Completed", count: member.tasksCompleted, color: "var(--c-greTexAccPri)" },
-                { label: "In Progress", count: member.tasksInProgress, color: "var(--c-bluTexAccPri)" },
-                { label: "To Do", count: member.tasksTodo, color: "var(--c-texDis)" },
-              ].map(b => (
-                <div key={b.label}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs" style={{ color: "var(--c-texTer)" }}>{b.label}</span>
-                    <span className="text-xs font-mono" style={{ color: "var(--c-texSec)" }}>{b.count}</span>
+            {totalTasks === 0 ? (
+              <p className="text-xs text-center py-4" style={{ color: "var(--c-texDis)" }}>No tasks assigned yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {[
+                  { label: "Completed", count: memberDone.length, color: "var(--c-greTexAccPri)" },
+                  { label: "Open", count: memberOpen.length - memberOverdue.length, color: "var(--c-bluTexAccPri)" },
+                  { label: "Overdue", count: memberOverdue.length, color: "var(--c-redTexAccPri)" },
+                ].map(b => (
+                  <div key={b.label}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs" style={{ color: "var(--c-texTer)" }}>{b.label}</span>
+                      <span className="text-xs font-mono" style={{ color: "var(--c-texSec)" }}>{b.count}</span>
+                    </div>
+                    <ProgressBar value={totalTasks ? (b.count / totalTasks) * 100 : 0} color={b.color} />
                   </div>
-                  <ProgressBar value={totalTasks ? (b.count / totalTasks) * 100 : 0} color={b.color} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Projects */}
-          <div className="rounded-xl p-5" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--c-texPri)" }}>Projects</h3>
-            <div className="space-y-2">
-              {member.projects.map(p => (
-                <div key={p.name} className="flex items-center gap-3 px-3 py-2.5 rounded-lg" style={{ backgroundColor: "var(--c-bacTer)" }}>
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
-                  <span className="text-sm font-medium flex-1" style={{ color: "var(--c-texPri)" }}>{p.name}</span>
-                  <span className="text-[10px]" style={{ color: "var(--c-texDis)" }}>{p.role}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Tasks list */}
         <div className="lg:col-span-3 rounded-xl p-5" style={{ backgroundColor: "var(--c-bacSec)", border: "1px solid var(--c-borPri)" }}>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--c-texPri)" }}>Recent Activity</h3>
-          <div className="space-y-4">
-            {member.recentActivity.map((a, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: member.color + "15" }}>
-                  <MessageSquare className="w-3 h-3" style={{ color: member.color }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm" style={{ color: "var(--c-texPri)" }}>
-                    <span style={{ color: "var(--c-texTer)" }}>{a.action}</span>{" "}
-                    <span className="font-medium">{a.target}</span>
-                  </p>
-                  <span className="text-[10px]" style={{ color: "var(--c-texDis)" }}>{a.time}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--c-texPri)" }}>Assigned Tasks</h3>
+
+          {memberTasks.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-sm" style={{ color: "var(--c-texDis)" }}>No tasks assigned to this member.</p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {memberTasks.map(t => {
+                const isDone = t.status === "done";
+                const overdue = t.dueDate && t.dueDate < today && !isDone;
+                return (
+                  <div
+                    key={t.id}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors hover:bg-[var(--c-bacTer)]"
+                  >
+                    {isDone
+                      ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "var(--c-greTexAccPri)" }} />
+                      : overdue
+                        ? <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: "var(--c-redTexAccPri)" }} />
+                        : <Circle className="w-4 h-4 flex-shrink-0" style={{ color: "var(--c-texDis)" }} />
+                    }
+                    <div className="flex-1 min-w-0">
+                      <span
+                        className="text-sm font-medium truncate block"
+                        style={{
+                          color: isDone ? "var(--c-texTer)" : "var(--c-texPri)",
+                          textDecoration: isDone ? "line-through" : "none",
+                        }}
+                      >
+                        {t.title}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2.5 flex-shrink-0">
+                      {t.priority !== "none" && (
+                        <span className="text-[10px] font-medium capitalize" style={{ color: PRIORITY_COLOR[t.priority] }}>
+                          {t.priority}
+                        </span>
+                      )}
+                      {t.dueDate && (
+                        <span
+                          className="flex items-center gap-0.5 text-[10px]"
+                          style={{ color: overdue ? "var(--c-redTexSec)" : "var(--c-texDis)" }}
+                        >
+                          <Clock className="w-3 h-3" />
+                          {t.dueDate}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>

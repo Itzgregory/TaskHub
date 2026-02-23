@@ -40,6 +40,7 @@ public class ExceptionHandlingMiddleware
                 422,
                 context.Request.Path,
                 correlationId,
+                "VALIDATION_FAILED",
                 validationEx.Errors)),
 
             NotFoundException notFoundEx => (404, CreateProblemDetails(
@@ -47,42 +48,48 @@ public class ExceptionHandlingMiddleware
                 notFoundEx.Message,
                 404,
                 context.Request.Path,
-                correlationId)),
+                correlationId,
+                "NOT_FOUND")),
 
             ForbiddenException forbiddenEx => (403, CreateProblemDetails(
                 "Forbidden",
                 forbiddenEx.Message,
                 403,
                 context.Request.Path,
-                correlationId)),
+                correlationId,
+                "FORBIDDEN")),
 
             ConcurrencyConflictException concurrencyEx => (412, CreateProblemDetails(
                 "Precondition Failed",
                 concurrencyEx.Message,
                 412,
                 context.Request.Path,
-                correlationId)),
+                correlationId,
+                "CONCURRENCY_CONFLICT")),
 
             BusinessRuleException businessEx => (400, CreateProblemDetails(
                 "Business Rule Violation",
                 businessEx.Message,
                 400,
                 context.Request.Path,
-                correlationId)),
+                correlationId,
+                "BUSINESS_RULE_VIOLATION")),
 
             DomainException domainEx => (400, CreateProblemDetails(
                 "Domain Error",
                 domainEx.Message,
                 400,
                 context.Request.Path,
-                correlationId)),
+                correlationId,
+                "DOMAIN_ERROR")),
 
             _ => (500, CreateProblemDetails(
                 "Internal Server Error",
                 "An unexpected error occurred. Please try again later.",
                 500,
                 context.Request.Path,
-                correlationId))
+                correlationId,
+                "INTERNAL_SERVER_ERROR"))
         };
 
         context.Response.StatusCode = statusCode;
@@ -96,12 +103,13 @@ public class ExceptionHandlingMiddleware
         await context.Response.WriteAsync(json);
     }
 
-    private object CreateProblemDetails(
+    private static object CreateProblemDetails(
         string title,
         string detail,
         int status,
         string instance,
         string correlationId,
+        string code = "UNKNOWN_ERROR",
         IReadOnlyDictionary<string, string[]>? errors = null)
     {
         var problemDetails = new Dictionary<string, object>
@@ -110,6 +118,7 @@ public class ExceptionHandlingMiddleware
             ["title"] = title,
             ["status"] = status,
             ["detail"] = detail,
+            ["code"] = code,
             ["instance"] = instance,
             ["correlationId"] = correlationId
         };

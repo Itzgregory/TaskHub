@@ -5,9 +5,10 @@ import type { Priority, Task } from "../../lib/types";
 import { useStore } from "../../lib/store";
 import { useToggleTodoStatus, useSoftDeleteTodo, useOrgMembers } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 import { formatRelativeDate, getTodayStr } from "@/lib/utils/tasks";
 import { Button } from "@/components/ui/button";
+import { getInitials } from "@/lib/utils/getInitials";
 
 const PRIORITY_DOT: Record<Priority, string> = {
   urgent: "var(--c-redTexAccPri)",
@@ -25,12 +26,6 @@ function isOverdue(dateStr: string): boolean {
   return dateStr < getTodayStr();
 }
 
-/** Returns up to 2 uppercase initials from a username or userId */
-function getInitials(name: string): string {
-  const parts = name.trim().split(/[\s._-]+/);
-  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-}
 
 interface TaskItemProps {
   task: Task;

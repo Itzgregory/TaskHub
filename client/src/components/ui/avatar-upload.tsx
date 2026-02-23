@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { getInitials } from "@/lib/utils/getInitials";
 
 interface AvatarUploadProps {
   /**
@@ -55,16 +56,6 @@ export function AvatarUpload({
       }
     };
   }, [previewUrl, initialImage]);
-
-  // Get initials from name for fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

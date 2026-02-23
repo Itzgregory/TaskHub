@@ -1,16 +1,20 @@
-/**
- * Base API client for TaskHub backend
- */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5078/api/v1';
 
-export interface ApiResponse<T> {
+export interface ApiSuccessResponse<T> {
   success: boolean;
   data?: T;
-  error?: {
-    code: string;
-    message: string;
-  };
+}
+
+export interface ProblemDetails {
+  type: string;
+  title: string;
+  detail: string;
+  code: string;
+  status: number;
+  instance: string;
+  correlationId: string;
+  errors?: Record<string, string[]>;
 }
 
 export interface ApiError {
@@ -41,7 +45,7 @@ class ApiClient {
         ...options.headers,
       },
       // important for session cookies...unifiedbeez issue with igee
-      credentials: 'include', 
+      credentials: 'include',
     };
 
     try {
@@ -51,17 +55,17 @@ class ApiClient {
       // why i didnt fix from the backend was because there would be no meaningful data to return here, and returning no content was correct
       // i could have also tried to return {sucess: true} with 200 status code, but then that would be a wrong solution since i will be bending REST semantics just to appease the client
       const text = await response.text();
-      const data: ApiResponse<T> = text ? await JSON.parse(text) : { success: true };
 
-      if (!response.ok || !data.success) {
-        const error: ApiError = {
-          code: data.error?.code || 'UNKNOWN_ERROR',
-          message: data.error?.message || `HTTP ${response.status}: ${response.statusText}`,
+      if (!response.ok) {
+        const problem: ProblemDetails = text ? JSON.parse(text) : {};
+        throw {
+          code: problem.code || 'UNKNOWN_ERROR',
+          message: problem.detail || problem.title || `HTTP ${response.status}: ${response.statusText}`,
           status: response.status,
-        };
-        throw error;
+        } as ApiError;
       }
 
+      const data: ApiSuccessResponse<T> = text ? JSON.parse(text) : { success: true };
       return data.data as T;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes('fetch')) {

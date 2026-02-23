@@ -6,7 +6,7 @@ import {
   Bell, Lock, Users, Twitter, Facebook, 
   Linkedin, Youtube 
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react"; // Add this import
+import type { LucideIcon } from "lucide-react"; 
 
 export const NAV_LINKS = ["Product", "Download", "Templates", "Pricing", "Enterprise"];
 
@@ -65,39 +65,39 @@ export const INTEGRATION_BULLETS = [
 export const TESTIMONIALS: { quote: string; name: string; role: string; initials: string }[] = [
   {
     quote: "TaskHub replaced five different tools we were using. Our entire team is on the same page for the first time in years.",
-    name: "Sarah Johnson",
+    name: "Amara Okafor",
     role: "Product Manager, Spotify",
-    initials: "SJ",
+    initials: "AO",
   },
   {
     quote: "The flexibility is unreal. We built our entire company wiki, project tracker, and CRM in TaskHub. It just works.",
-    name: "Marcus Chen",
+    name: "Kwame Mensah",
     role: "CTO, Headspace",
-    initials: "MC",
+    initials: "KM",
   },
   {
     quote: "I switched from Asana, Notion, and Confluence to TaskHub. Haven't looked back once. It's that good.",
-    name: "Priya Patel",
+    name: "Fatima Diallo",
     role: "Engineering Lead, Figma",
-    initials: "PP",
+    initials: "FD",
   },
   {
     quote: "Onboarding new team members used to take days. Now I just send them our TaskHub workspace and they're up in an hour.",
-    name: "Alex Rivera",
+    name: "Chidi Eze",
     role: "Operations Director, Stripe",
-    initials: "AR",
+    initials: "CE",
   },
   {
     quote: "The docs + tasks combo is a killer feature. We write the spec and track the work in the exact same place.",
-    name: "Jordan Kim",
+    name: "Nala Dlamini",
     role: "Design Lead, Airbnb",
-    initials: "JK",
+    initials: "ND",
   },
   {
     quote: "We've tried everything. TaskHub is the first tool that actually stuck across engineering, design, and marketing.",
-    name: "Taylor Brooks",
+    name: "Tunde Adeyemi",
     role: "CEO, Match Group",
-    initials: "TB",
+    initials: "TA",
   },
 ];
 

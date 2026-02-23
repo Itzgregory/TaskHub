@@ -1,4 +1,3 @@
-
 export type Priority = "urgent" | "high" | "medium" | "low" | "none";
 export type TaskStatus = "todo" | "in_progress" | "done";
 

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { AppLayout } from "@/components/layout/dashboard/AppLayout";
 import { Activity, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ function getTimeGroup(iso: string): "today" | "yesterday" | "older" {
 
 export default function TeamActivity() {
   const { activeOrg } = useAuth();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const pageSize = 30;
 
@@ -81,6 +83,13 @@ export default function TeamActivity() {
     );
   }
 
+  const handleEntryClick = (entryId: string) => {
+    navigate({ 
+      to: '/dashboard/org/activity/$activityId', 
+      params: { activityId: entryId } 
+    });
+  };
+
   const renderEntry = (entry: AuditEntryDto) => {
     const meta = AUDIT_ACTION_META[entry.action] ?? DEFAULT_AUDIT_META;
     const Icon = meta.icon;
@@ -90,9 +99,11 @@ export default function TeamActivity() {
     return (
       <div
         key={entry.id}
-        className="flex items-start gap-3 px-3 py-3 rounded-lg transition-colors"
+        className="flex items-start gap-3 px-3 py-3 rounded-lg transition-colors cursor-pointer"
+        onClick={() => handleEntryClick(entry.id)}
         onMouseOver={e => (e.currentTarget.style.backgroundColor = "var(--c-bacTer)")}
-        onMouseOut={e => (e.currentTarget.style.backgroundColor = "")}
+        onMouseOut={e => (e.currentTarget.style.backgroundColor = "transparent")}
+        style={{ backgroundColor: "transparent" }}
       >
         {/* Avatar */}
         <div
@@ -123,7 +134,7 @@ export default function TeamActivity() {
             <span className="text-[10px]" style={{ color: "var(--c-texDis)" }}>
               {formatTimestamp(entry.timestamp)}
             </span>
-            {/* so this is the correlation ID. IT DOES NOT SHOW UP, BUT WHEN IT DOES, IT MAKES ITSELF USEFUL */}
+            {/* Correlation ID - hidden but useful for debugging */}
             {entry.correlationId && (
               <span
                 className="text-[10px] font-mono"

@@ -56,7 +56,7 @@ public class TodosController : BaseApiController
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTodoCommand command)
     {
         if (id != command.Id)
-            return BadRequest(new { success = false, error = "ID mismatch" });
+            return BadRequest("ID mismatch");
 
         var result = await _updateHandler.HandleAsync(command);
 
@@ -71,7 +71,7 @@ public class TodosController : BaseApiController
     public async Task<IActionResult> ToggleStatus(Guid id, [FromBody] ToggleStatusCommand command)
     {
         if (id != command.Id)
-            return BadRequest(new { success = false, error = "ID mismatch" });
+            return BadRequest("ID mismatch");
 
         var result = await _toggleStatusHandler.HandleAsync(command);
 
@@ -110,7 +110,7 @@ public class TodosController : BaseApiController
     public async Task<IActionResult> Restore(Guid id, [FromBody] RestoreTodoCommand command)
     {
         if (id != command.Id)
-            return BadRequest(new { success = false, error = "ID mismatch" });
+            return BadRequest("ID mismatch");
 
         var result = await _restoreHandler.HandleAsync(command);
 

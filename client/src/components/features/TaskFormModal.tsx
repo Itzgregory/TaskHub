@@ -4,9 +4,16 @@ import type { Priority, Task } from "../../lib/types";
 import { useCreateTodo, useUpdateTodo, useOrgMembers } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { mapTaskToCreateRequest, mapTaskToUpdateRequest } from "@/lib/api/mappers";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
   { value: "urgent", label: "🔴 Urgent" },
@@ -15,6 +22,9 @@ const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
   { value: "low", label: "🟢 Low" },
   { value: "none", label: "— None" },
 ];
+
+// Use a special value for unassigned that's not an empty string
+const UNASSIGNED_VALUE = "unassigned";
 
 interface TaskFormModalProps {
   task?: Task;
@@ -41,14 +51,23 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "none");
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? "");
   const [tags, setTags] = useState(task?.tags.join(", ") ?? "");
+  // Store as empty string for unassigned in state, but use special value for select
   const [assignedToUserId, setAssignedToUserId] = useState(task?.assignedToUserId ?? "");
+
+  // Convert between empty string and UNASSIGNED_VALUE for the Select component
+  const selectAssigneeValue = assignedToUserId === "" ? UNASSIGNED_VALUE : assignedToUserId;
+
+  const handleAssigneeChange = (value: string) => {
+    // Convert UNASSIGNED_VALUE back to empty string for the actual state
+    setAssignedToUserId(value === UNASSIGNED_VALUE ? "" : value);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !orgId) return;
 
     const tagArray = tags.split(",").map(t => t.trim()).filter(Boolean);
-    const assignee = assignedToUserId || undefined;
+    const assignee = assignedToUserId || undefined; // Empty string becomes undefined
 
     try {
       if (isEditing && task) {
@@ -147,22 +166,28 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
 
           {/* Meta fields */}
           <div
-            className="flex flex-wrap gap-2 pt-2"
+            className="flex flex-wrap items-center gap-2 pt-2"
             style={{ borderTop: "1px solid var(--c-borPri)" }}
           >
             {/* Priority */}
             <div className="relative">
-              <select
-                value={priority}
-                onChange={e => setPriority(e.target.value as Priority)}
-                className="th-select pr-7"
-              >
-                {PRIORITY_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+              <Select value={priority} onValueChange={(value: Priority) => setPriority(value)}>
+                <SelectTrigger 
+                  className="w-[130px] h-8 pl-7"
+                  style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}
+                >
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}>
+                  {PRIORITY_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Flag
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none"
                 style={{ color: "var(--c-texTer)" }}
               />
             </div>
@@ -170,20 +195,24 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
             {/* Assign to Member */}
             {members.length > 0 && (
               <div className="relative">
-                <select
-                  value={assignedToUserId}
-                  onChange={e => setAssignedToUserId(e.target.value)}
-                  className="th-select pr-7"
-                >
-                  <option value="">Unassigned</option>
-                  {members.map(m => (
-                    <option key={m.userId} value={m.userId}>
-                      {m.username}
-                    </option>
-                  ))}
-                </select>
+                <Select value={selectAssigneeValue} onValueChange={handleAssigneeChange}>
+                  <SelectTrigger 
+                    className="w-[140px] h-8 pl-7"
+                    style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}
+                  >
+                    <SelectValue placeholder="Unassigned" />
+                  </SelectTrigger>
+                  <SelectContent style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}>
+                    <SelectItem value={UNASSIGNED_VALUE}>Unassigned</SelectItem>
+                    {members.map(m => (
+                      <SelectItem key={m.userId} value={m.userId}>
+                        {m.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <User
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none"
                   style={{ color: "var(--c-texTer)" }}
                 />
               </div>
@@ -195,8 +224,13 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
                 type="date"
                 value={dueDate}
                 onChange={e => setDueDate(e.target.value)}
-                className="th-select pl-7 h-auto py-1.5 border-0 shadow-none focus-visible:ring-0"
-                style={{ paddingLeft: "28px" }}
+                className="h-8 py-1.5 border-0 shadow-none focus-visible:ring-0"
+                style={{ 
+                  backgroundColor: "var(--c-bacEle)", 
+                  borderColor: "var(--c-borPri)",
+                  paddingLeft: "28px",
+                  width: "180px"
+                }}
               />
               <Calendar
                 className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none"
@@ -210,7 +244,8 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
               placeholder="Tags (comma separated)"
               value={tags}
               onChange={e => setTags(e.target.value)}
-              className="th-select h-auto py-1.5 border-0 shadow-none focus-visible:ring-0"
+              className="h-8 py-1.5 border-0 shadow-none focus-visible:ring-0 flex-1 min-w-[180px]"
+              style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}
             />
           </div>
 

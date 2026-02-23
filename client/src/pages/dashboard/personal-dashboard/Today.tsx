@@ -1,63 +1,88 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Sun, Plus } from "lucide-react";
+import { Sun } from "lucide-react";
 import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
-import { TaskList } from "../../../components/features/TaskList";
 import { AddTaskButton } from "../../../components/features/AddTaskButton";
 import { TaskFormModal } from "../../../components/features/TaskFormModal";
+import { EmptyState } from "../../../components/features/EmptyState";
+import { TaskTableRow } from "@/components/features/TaskTableRow";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useTodos } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { mapTodoDtoToTask } from "@/lib/api/mappers";
 import { getTodayStr } from "@/lib/utils/tasks";
+import { useTaskToggle } from "@/lib/hooks/useTaskToggle";
+import { useOrgMemberMap } from "@/lib/hooks/useOrgMemberMap";
+import type { Task } from "@/lib/types";
+
+function TaskTable({ rows, memberMap, onEdit, onToggle, isToggling, faded }: {
+  rows: Task[];
+  memberMap: Map<string, string>;
+  onEdit: (task: Task) => void;
+  onToggle: (task: Task) => void;
+  isToggling: boolean;
+  faded?: boolean;
+}) {
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--c-borPri)", opacity: faded ? 0.6 : 1 }}>
+      <Table>
+        <TableHeader>
+          <TableRow style={{ backgroundColor: "var(--c-bacTer)" }}>
+            <TableHead className="w-8" />
+            <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Task</TableHead>
+            <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Priority</TableHead>
+            <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Assignee</TableHead>
+            <TableHead className="text-xs font-semibold uppercase tracking-wider text-right" style={{ color: "var(--c-texTer)" }}>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map(task => (
+            <TaskTableRow key={task.id} task={task} memberMap={memberMap} onEdit={onEdit} onToggle={onToggle} isToggling={isToggling} showDueDate={false} showTags={false} />
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
 
 export default function TodayPage() {
   const { activeOrg } = useAuth();
   const [addingTask, setAddingTask] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  // Compute today's date string once — plain const since strings are immutable.
   const todayStr = getTodayStr();
-  const today = new Date(todayStr); // stable Date for format() below
+  const today = new Date(todayStr);
 
-  // Fetch todos for today
   const { data: todosData, isLoading } = useTodos({
-    orgId: activeOrg?.orgId || '',
+    orgId: activeOrg?.orgId || "",
     page: 1,
     pageSize: 100,
     includeArchived: false,
     includeDeleted: false,
   });
 
-  const activeOrgId = activeOrg?.orgId;
+  const memberMap = useOrgMemberMap(activeOrg?.orgId);
+  const { toggle, isToggling } = useTaskToggle(activeOrg?.orgId ?? "");
 
-  // Filter and map todos to tasks — no manual useMemo; let React Compiler optimise.
   const tasks = todosData?.todos.items
     ? todosData.todos.items
-      .filter(todo => {
-        if (!todo.dueDate) return false;
-        const dueDateStr = todo.dueDate.split('T')[0];
-        return dueDateStr === todayStr;
-      })
-      .map(todo => mapTodoDtoToTask(todo, activeOrgId))
-      .sort((a, b) => {
-        // Sort by priority weight, then by due date
-        const priorityWeight = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
-        const priorityDiff = priorityWeight[a.priority] - priorityWeight[b.priority];
-        if (priorityDiff !== 0) return priorityDiff;
-        return (a.dueDate || '').localeCompare(b.dueDate || '');
-      })
+        .filter(todo => todo.dueDate && todo.dueDate.split("T")[0] === todayStr)
+        .map(todo => mapTodoDtoToTask(todo, activeOrg?.orgId ?? ""))
+        .sort((a, b) => {
+          const w: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3, none: 4 };
+          const diff = w[a.priority] - w[b.priority];
+          return diff !== 0 ? diff : (a.dueDate || "").localeCompare(b.dueDate || "");
+        })
     : [];
 
   const doneTasks = tasks.filter(t => t.status === "done");
   const pendingTasks = tasks.filter(t => t.status !== "done");
-
   const progress = tasks.length > 0 ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
 
   if (!activeOrg) {
     return (
       <AppLayout title="Today" subtitle="Please select an organisation">
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <p className="text-sm" style={{ color: "var(--c-texTer)" }}>No organisation selected.</p>
-        </div>
+        <EmptyState icon={<Sun className="w-6 h-6" style={{ color: "var(--c-texDis)" }} />} title="No organisation selected." />
       </AppLayout>
     );
   }
@@ -67,7 +92,6 @@ export default function TodayPage() {
       title={format(today, "EEEE, MMMM d")}
       subtitle={isLoading ? "Loading today's tasks..." : `${pendingTasks.length} pending · ${doneTasks.length} done`}
     >
-      {/* Progress bar */}
       {tasks.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-1.5">
@@ -75,45 +99,28 @@ export default function TodayPage() {
             <span className="text-xs font-mono" style={{ color: "var(--c-texSec)" }}>{progress}%</span>
           </div>
           <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: "var(--c-bacTer)" }}>
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${progress}%`,
-                backgroundColor: progress === 100 ? "var(--c-greTexAccPri)" : "var(--c-bluTexAccPri)",
-              }}
-            />
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, backgroundColor: progress === 100 ? "var(--c-greTexAccPri)" : "var(--c-bluTexAccPri)" }} />
           </div>
         </div>
       )}
 
-      <TaskList
-        tasks={pendingTasks}
-        emptyMessage="No tasks for today"
-        emptyIcon={<Sun className="w-6 h-6" style={{ color: "var(--c-texDis)" }} />}
-      />
+      {pendingTasks.length === 0 && doneTasks.length === 0 ? (
+        <EmptyState icon={<Sun className="w-6 h-6" style={{ color: "var(--c-texDis)" }} />} title="No tasks for today" description="Add a task with today's due date to see it here" />
+      ) : (
+        <div className="space-y-6">
+          {pendingTasks.length > 0 && <TaskTable rows={pendingTasks} memberMap={memberMap} onEdit={setEditingTask} onToggle={toggle} isToggling={isToggling} />}
+          {doneTasks.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--c-texTer)" }}>Completed ({doneTasks.length})</h3>
+              <TaskTable rows={doneTasks} memberMap={memberMap} onEdit={setEditingTask} onToggle={toggle} isToggling={isToggling} faded />
+            </div>
+          )}
+        </div>
+      )}
 
       <AddTaskButton onClick={() => setAddingTask(true)} />
-
-      {doneTasks.length > 0 && (
-        <div className="mt-8">
-          <h3
-            className="text-xs font-semibold uppercase tracking-wider mb-2 px-3"
-            style={{ color: "var(--c-texTer)" }}
-          >
-            Completed ({doneTasks.length})
-          </h3>
-          <div style={{ opacity: 0.6 }}>
-            <TaskList tasks={doneTasks} />
-          </div>
-        </div>
-      )}
-
-      {addingTask && (
-        <TaskFormModal
-          defaultDueDate={todayStr}
-          onClose={() => setAddingTask(false)}
-        />
-      )}
+      {addingTask && <TaskFormModal defaultDueDate={todayStr} onClose={() => setAddingTask(false)} />}
+      {editingTask && <TaskFormModal task={editingTask} onClose={() => setEditingTask(null)} />}
     </AppLayout>
   );
 }

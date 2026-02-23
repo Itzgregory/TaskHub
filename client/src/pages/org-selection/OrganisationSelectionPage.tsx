@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useCreateOrganisation, useSetActiveOrg } from "@/lib/api/hooks";
 import { EmptyState } from "@/components/features/EmptyState";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/lib/hooks/use-toast";
 
 export default function OrganisationSelectionPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -27,11 +27,11 @@ export default function OrganisationSelectionPage() {
     // Update backend active org + local context
     await setActiveOrgMutation.mutateAsync({ orgId });
     setActiveOrg(org);
-    navigate({ to: "/dashboard/today" });
+    navigate({ to: "/dashboard/org/home" });
     toast({
-          title: "Welcome! to TaskHub for " + org.orgName,
-          description: "Your organisation has been set up successfully.",
-        });
+      title: "Welcome! to TaskHub for " + org.orgName,
+      description: "Your organisation has been set up successfully.",
+    });
   };
 
   const handleCreateOrg = async () => {
@@ -51,14 +51,14 @@ export default function OrganisationSelectionPage() {
         joinedAt: new Date().toISOString(),
       };
       setActiveOrg(newOrg);
-      navigate({ to: "/dashboard/today" });
+      navigate({ to: "/dashboard/org/home" });
     } catch {
       // Errors are surfaced via toasts by hooks/caller if desired
     }
   };
 
   const handleSkip = () => {
-    navigate({ to: "/dashboard/today" });
+    navigate({ to: "/dashboard/org/home" });
   };
 
   return (
@@ -168,14 +168,7 @@ export default function OrganisationSelectionPage() {
               Create New Organisation
             </Button>
 
-            <Button
-              variant="link"
-              onClick={handleSkip}
-              className="w-full text-sm"
-              style={{ color: "var(--c-texSec)" }}
-            >
-              Skip to personal workspace →
-            </Button>
+
           </div>
         </CardContent>
       </Card>

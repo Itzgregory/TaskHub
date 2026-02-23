@@ -1,6 +1,6 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
 import { forwardRef } from "react";
-import { cn } from "../lib/utils";
+import { cn } from "../lib/utils/clsx";
 
 interface NavLinkCompatProps
   extends Omit<LinkProps, "activeProps">,

@@ -9,7 +9,7 @@ import { GoogleButton } from "@/components/auth/login/GoogleButton";
 import { TermsNotice } from "@/components/auth/signup/TermsNotice";
 import { useRegister } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/lib/hooks/use-toast";
 
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);

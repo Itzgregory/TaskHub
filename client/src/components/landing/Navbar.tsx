@@ -1,7 +1,6 @@
 import { NAV_LINKS } from "@/lib/constants/landing";
-import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
@@ -37,7 +36,7 @@ export function Navbar({ mobileOpen, setMobileOpen }: NavbarProps) {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {NAV_LINKS.map((label) => (
             <button
               key={label}
@@ -51,11 +50,11 @@ export function Navbar({ mobileOpen, setMobileOpen }: NavbarProps) {
         </nav>
 
         {/* Desktop Auth */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-2">
           <Link
             to="/auth/login"
             style={{ color: "var(--c-texSec)" }}
-            className="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--c-bacTer)] transition-colors"
+            className="px-3 py-1.5 text-sm rounded-md hover:bg-[var(--c-bacTer)] transition-colors whitespace-nowrap"
           >
             Log in
           </Link>
@@ -65,7 +64,7 @@ export function Navbar({ mobileOpen, setMobileOpen }: NavbarProps) {
               backgroundColor: "var(--c-bluBacAccPri)",
               color: "#fff",
             }}
-            className="px-3 py-1.5 text-sm font-medium rounded-md hover:opacity-90 transition-opacity"
+            className="px-3 py-1.5 text-sm font-medium rounded-md hover:opacity-90 transition-opacity whitespace-nowrap"
           >
             Get TaskHub free
           </Link>
@@ -73,12 +72,12 @@ export function Navbar({ mobileOpen, setMobileOpen }: NavbarProps) {
 
         {/* Mobile menu using Sheet component */}
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild className="md:hidden">
+          <SheetTrigger asChild className="lg:hidden">
             <Button variant="ghost" size="icon" style={{ color: "var(--c-texSec)" }}>
               <Menu size={20} />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-[300px] p-0">
+          <SheetContent side="right" className="w-[300px] p-0" style={{ backgroundColor: "var(--c-bacPri)" }}>
             <div className="flex flex-col h-full">
               <div className="p-5 border-b" style={{ borderColor: "var(--c-borPri)" }}>
                 <div className="flex items-center gap-2">

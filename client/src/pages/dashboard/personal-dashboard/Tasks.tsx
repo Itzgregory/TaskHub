@@ -1,55 +1,60 @@
 import { useMemo, useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Circle } from "lucide-react";
 import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
-import { TaskList } from "../../../components/features/TaskList";
 import { AddTaskButton } from "../../../components/features/AddTaskButton";
 import { TaskFormModal } from "../../../components/features/TaskFormModal";
 import { EmptyState } from "../../../components/features/EmptyState";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useTodos } from "@/lib/api/hooks";
 import { mapTodoDtoToTask } from "@/lib/api/mappers";
-import { PRIORITY_WEIGHT } from "@/lib/utils/tasks";
-import { Button } from "@/components/ui/button";
-import type { Priority } from "../../../lib/types";
+import { PRIORITY_WEIGHT, getTodayStr } from "@/lib/utils/tasks";
+import { useTaskToggle } from "@/lib/hooks/useTaskToggle";
+import { useOrgMemberMap } from "@/lib/hooks/useOrgMemberMap";
+import { TaskTableRow } from "@/components/features/TaskTableRow";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { Task } from "@/lib/types";
+import { FILTER_BTNS, FilterStatus, SORT_OPTIONS, SortBy } from "@/lib/utils/filter";
 
-type FilterStatus = "all" | "todo" | "in_progress" | "done";
-type SortBy = "order" | "dueDate" | "priority";
-
-const FILTER_BTNS: { value: FilterStatus; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "todo", label: "Todo" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "done", label: "Done" },
-];
 
 export default function TasksPage() {
   const { activeOrg } = useAuth();
   const [addingTask, setAddingTask] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [sortBy, setSortBy] = useState<SortBy>("order");
+
+  const apiStatus = filterStatus === "all" ? undefined : filterStatus === "open" ? "Open" : "Done";
 
   const { data, isLoading } = useTodos({
     orgId: activeOrg?.orgId || "",
     page: 1,
     pageSize: 100,
+    status: apiStatus,
   });
+
+  const memberMap = useOrgMemberMap(activeOrg?.orgId);
+  const { toggle, isToggling } = useTaskToggle(activeOrg?.orgId ?? "");
 
   const tasks = useMemo(() => {
     if (!data?.todos.items || !activeOrg) return [];
-    let mapped = data.todos.items.map((todo) => mapTodoDtoToTask(todo, activeOrg.orgId));
-
-    if (filterStatus !== "all") {
-      mapped = mapped.filter((t) => t.status === filterStatus);
-    }
-
+    const mapped = data.todos.items.map(todo => mapTodoDtoToTask(todo, activeOrg.orgId));
     mapped.sort((a, b) => {
       if (sortBy === "priority") return PRIORITY_WEIGHT[a.priority] - PRIORITY_WEIGHT[b.priority];
       if (sortBy === "dueDate") return (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999");
       return a.title.localeCompare(b.title);
     });
-
     return mapped;
-  }, [data, activeOrg, filterStatus, sortBy]);
+  }, [data, activeOrg, sortBy]);
 
   if (!activeOrg) {
     return (
@@ -69,11 +74,7 @@ export default function TasksPage() {
     >
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2 mb-5">
-        {/* Status filter tabs */}
-        <div
-          className="flex items-center overflow-hidden text-xs rounded-lg"
-          style={{ border: "1px solid var(--c-borPri)" }}
-        >
+        <div className="flex items-center overflow-hidden rounded-lg" style={{ border: "1px solid var(--c-borPri)" }}>
           {FILTER_BTNS.map(({ value, label }) => (
             <Button
               key={value}
@@ -90,27 +91,69 @@ export default function TasksPage() {
             </Button>
           ))}
         </div>
-
-        {/* Sort */}
         <div className="flex items-center gap-1.5 ml-auto">
           <SlidersHorizontal className="w-3.5 h-3.5" style={{ color: "var(--c-texTer)" }} />
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortBy)}
-            className="th-select"
-          >
-            <option value="order">Default</option>
-            <option value="dueDate">Due Date</option>
-            <option value="priority">Priority</option>
-          </select>
+          
+          {/* Replace native select with custom Select component */}
+          <Select value={sortBy} onValueChange={(value: SortBy) => setSortBy(value)}>
+            <SelectTrigger className="w-[130px] h-8 text-xs">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}>
+              {SORT_OPTIONS.map(({ value, label }) => (
+                <SelectItem key={value} value={value} className="text-xs">
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <TaskList tasks={tasks} showProject emptyMessage="No tasks match your filters" />
+      {/* Table */}
+      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--c-borPri)" }}>
+        <Table>
+          <TableHeader>
+            <TableRow style={{ backgroundColor: "var(--c-bacTer)" }}>
+              <TableHead className="w-8" />
+              <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Task</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Priority</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Due Date</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Assignee</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Tags</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-right" style={{ color: "var(--c-texTer)" }}>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-10 text-sm" style={{ color: "var(--c-texDis)" }}>Loading tasks…</TableCell>
+              </TableRow>
+            ) : tasks.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7}>
+                  <EmptyState icon={<Circle className="w-6 h-6" style={{ color: "var(--c-texDis)" }} />} title="No tasks match your filters" />
+                </TableCell>
+              </TableRow>
+            ) : tasks.map(task => (
+              <TaskTableRow
+                key={task.id}
+                task={task}
+                memberMap={memberMap}
+                onEdit={setEditingTask}
+                onToggle={toggle}
+                isToggling={isToggling}
+                showDueDate
+                showTags
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <AddTaskButton onClick={() => setAddingTask(true)} />
-
       {addingTask && <TaskFormModal onClose={() => setAddingTask(false)} />}
+      {editingTask && <TaskFormModal task={editingTask} onClose={() => setEditingTask(null)} />}
     </AppLayout>
   );
 }
