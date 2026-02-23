@@ -1,148 +1,52 @@
 # Project Charter: TaskHub
 
-**Document Version:** 1.0  
-**Date:** February 19, 2026  
-**Project Manager:** Development Team  
-**Sponsor:** Anthropic (Take-Home Exercise)  
+**Version:** 2.0
+**Date:** February 23, 2026
 
 ---
 
-## Executive Summary
+## What Is This?
 
-TaskHub is a multi-tenant todo management platform designed to demonstrate enterprise-grade software development practices. The system enables organizations to manage tasks with role-based access control, comprehensive audit logging, and robust concurrency handling.
-
----
-
-## Project Objectives
-
-### Primary Objectives
-1. **Multi-tenancy**: Support multiple organizations with complete data isolation
-2. **Security**: Implement RBAC, OWASP compliance, and comprehensive audit trails
-3. **Reliability**: Ensure data consistency through optimistic concurrency control
-4. **Portability**: Enable data import/export with validation reporting
-5. **Maintainability**: Demonstrate clean architecture and extensive documentation
-
-### Success Criteria
-- All user stories completed with acceptance criteria met
-- Zero critical security vulnerabilities
-- 80%+ test coverage across unit, integration, and e2e tests
-- Complete SDLC documentation delivered
-- System runs successfully with both InMemory and File storage
+TaskHub is a task management web app built as a take-home exercise. It's designed to show how a well-structured, secure, multi-tenant system can be built from the ground up — where multiple organisations can each manage their own tasks completely independently of one another.
 
 ---
 
-## Scope
+## Goals
 
-### In Scope
-- User authentication and session management
-- Multi-tenant organization management
-- RBAC with Member and OrgAdmin roles
-- Todo CRUD with soft delete, restore, and archive
-- Optimistic concurrency with ETags
-- Audit logging for compliance
-- Import/export (JSON and CSV)
-- File-based storage with schema migrations
-- Background jobs for automatic archiving
-- Health monitoring endpoints
-
-### Out of Scope
-- Real-time collaboration features
-- Mobile native applications
-- Third-party integrations (Slack, email notifications)
-- Advanced analytics and reporting
-- Database storage (PostgreSQL, MongoDB)
-- Container orchestration (Kubernetes)
+The project sets out to demonstrate five things done properly: organisations kept fully isolated from each other's data, meaningful security with role-based permissions and a full audit trail, data consistency when multiple things happen at once, the ability to import and export data, and code that's clean and well-documented throughout.
 
 ---
 
-## Stakeholders
+## What's Included
 
-| Role | Name | Responsibilities |
-|------|------|------------------|
-| Product Owner | Take-Home Reviewer | Define acceptance criteria, review deliverables |
-| Lead Developer | Candidate | Architecture, implementation, documentation |
-| Security Reviewer | Assessor | Threat model review, security compliance |
-| QA Lead | Assessor | Test strategy review, quality gates |
+The app covers user login and session management, organisation management, two permission levels (regular member and org admin), full task management including soft delete and archiving, an audit log, import/export in both JSON and CSV formats, file-based data storage with migration support, a background job for auto-archiving old tasks, and basic health monitoring.
+
+Deliberately left out of scope: real-time features, mobile apps, third-party integrations, analytics, traditional databases, and cloud infrastructure.
 
 ---
 
-## Timeline & Milestones
+## Who's Involved
 
-| Phase | Duration | Deliverables |
-|-------|----------|--------------|
-| **Planning** | 4 hours | Charter, Backlog, Risk Register |
-| **Requirements** | 4 hours | Spec, Personas, Failure Paths |
-| **Architecture** | 6 hours | C4 diagrams, ADRs, Design decisions |
-| **Implementation** | 16 hours | Domain, Application, Infrastructure, API layers |
-| **Security** | 4 hours | Threat model, STRIDE analysis |
-| **Testing** | 6 hours | Unit tests, Integration tests, Test strategy |
-| **DevOps** | 3 hours | CI pipeline, Build automation |
-| **Maintenance** | 3 hours | Bugfix, Change request, Security hardening |
-| **Documentation** | 4 hours | README, API docs, Deployment guide |
-
-**Total Estimated Effort:** 50 hours  
-**Target Completion:** 1 week from start
+Since this is a solo take-home project, the roles are straightforward. The reviewer acts as the product owner and assessor. The candidate (me) handled everything else — architecture, implementation, testing, and documentation.
 
 ---
 
-## Budget & Resources
+## Timeline
 
-### Development Resources
-- 1 Full-stack Developer
-- Development environment: macOS with .NET 10, Node.js 24
-- Tools: VS Code, Git, Postman/Swagger
-
-### Infrastructure
-- Local development only (no cloud costs)
-- File-based storage (no database licensing)
-
-**Total Budget:** $0 (developer time only)
+The project is scoped at roughly 50 hours of work across one week, broken down as follows: planning and requirements (8 hours), architecture (6 hours), implementation (16 hours), security (4 hours), testing (6 hours), DevOps (3 hours), maintenance (3 hours), and documentation (4 hours).
 
 ---
 
-## Risks & Assumptions
+## Resources & Cost
 
-### Key Assumptions
-1. File-based storage is acceptable for MVP (no traditional database)
-2. Session-based auth meets security requirements
-3. InMemory storage acceptable for development/testing
-4. No requirement for horizontal scaling
-
-### High-Level Risks
-1. **Technical Complexity**: Clean Architecture + File storage + Migrations → Mitigated by skill documentation
-2. **Time Constraints**: 50-hour scope in 1-week timeline → Mitigated by clear prioritization
-3. **Security Gaps**: First-time OWASP ASVS implementation → Mitigated by threat modeling
-
-See [RISK-REGISTER.md](./RISK-REGISTER.md) for detailed risk analysis.
+One developer, a local development machine running .NET 10 and Node.js 24, and file-based storage instead of a traditional database. Total infrastructure cost: nothing.
 
 ---
 
-## Governance
+## Key Risks
 
-### Decision Authority
-- **Architecture Decisions**: Lead Developer (documented in ADRs)
-- **Scope Changes**: Product Owner approval required
-- **Technical Trade-offs**: Lead Developer with justification
-
-### Communication Plan
-- **Status Updates**: Via Git commits and documentation
-- **Issues**: Tracked in code comments and ADRs
-- **Deliverables**: Submitted via organized repository structure
+The three main risks going in were the complexity of combining clean architecture with file-based storage and migrations, the tight 50-hour timeline, and implementing OWASP security standards for the first time. Each was mitigated through clear prioritisation, thorough documentation of decisions, and upfront threat modelling.
 
 ---
 
-## Approval
-
-This charter authorizes the project team to proceed with requirements gathering, architecture design, and implementation as outlined above.
-
-**Approved By:**  
-_[Candidate Name]_  
-Date: February 19, 2026
-
----
-
-## Document Control
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-02-19 | Development Team | Initial charter |
+**Approved:** February 19, 2026

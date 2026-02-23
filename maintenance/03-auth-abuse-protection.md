@@ -1,170 +1,50 @@
-# Security Hardening: Protect Authentication Endpoints from Scripted Abuse
+# Security Update: Protecting Login and Registration from Automated Attacks
 
-**Ticket title:** "Protect authentication endpoints from scripted abuse without harming UX."
+## What Is This Change?
 
----
-
-## Approach Chosen: IP-Based Rate Limiting
-
-We chose **rate limiting** over progressive backoff or temporary lockout because:
-
-| Option | Pros | Cons | Decision |
-|--------|------|------|----------|
-| **Rate limiting** | Simple, transparent, no UX impact for normal users | Attackers can rotate IPs | ✅ Chosen |
-| Progressive backoff | Increasingly punishes repeat offenders | Penalises legitimate users who mistype passwords | Considered |
-| Temporary lockout | Effective against targeted attacks | Enables denial-of-service against specific accounts | Rejected |
-
-Rate limiting is the best balance of security and UX: a legitimate user will never hit 10 login attempts in 1 minute.
+This update adds rate limiting to the login and registration pages — meaning the system now caps how many times someone can attempt these actions within a given time window. This is a targeted defence against bots and scripts that try thousands of password combinations automatically.
 
 ---
 
-## Configuration
+## Why Rate Limiting?
 
-All limits are configurable via `appsettings.json`:
-
-```json
-{
-  "IpRateLimiting": {
-    "EnableEndpointRateLimiting": true,
-    "StackBlockedRequests": false,
-    "RealIpHeader": "X-Real-IP",
-    "ClientIdHeader": "X-ClientId",
-    "GeneralRules": [
-      {
-        "Endpoint": "POST:/api/v1/auth/login",
-        "Period": "1m",
-        "Limit": 10
-      },
-      {
-        "Endpoint": "POST:/api/v1/auth/register",
-        "Period": "1h",
-        "Limit": 5
-      }
-    ]
-  }
-}
-```
-
-| Parameter | Default | Rationale |
-|-----------|---------|-----------|
-| Login limit | 10 req/min/IP | Allows ~3 mistypes + retry; blocks brute-force |
-| Register limit | 5 req/hr/IP | Account creation is infrequent; prevents spam |
+Three approaches were considered. Temporary account lockouts were ruled out immediately — they can actually be weaponised to lock real users out of their own accounts on purpose. Progressive slowdowns (making each failed attempt wait longer) were considered, but they punish legitimate users who simply mistype their password a few times. Rate limiting by IP address was chosen because it stops scripted attacks without affecting anyone using the app normally.
 
 ---
 
-## Implementation
+## How It Works
 
-### Rate Limiting Middleware
+Two limits are now in place:
 
-```csharp
-// Program.cs
-builder.Services.AddMemoryCache();
-builder.Services.Configure<IpRateLimitOptions>(
-    builder.Configuration.GetSection("IpRateLimiting"));
+**Login:** A maximum of 10 attempts per minute, per IP address. A real user would have to mistype their password 10 times in under 60 seconds to be blocked — effectively impossible in normal use.
 
-builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
-builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
-builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+**Registration:** A maximum of 5 new account registrations per hour, per IP address. Creating an account is something you do once, so this is more than sufficient for any legitimate user.
 
-// In middleware pipeline (before auth)
-app.UseIpRateLimiting();
-```
-
-When the limit is exceeded, the middleware returns:
-
-```http
-HTTP/1.1 429 Too Many Requests
-Retry-After: 60
-Content-Type: application/problem+json
-
-{
-  "type": "https://httpstatuses.com/429",
-  "title": "Too Many Requests",
-  "status": 429,
-  "detail": "Rate limit exceeded. Try again in 60 seconds.",
-  "correlationId": "abc-123"
-}
-```
+If someone exceeds either limit, they receive a clear message telling them they've been blocked and how long to wait before trying again. All settings are adjustable without changing any code.
 
 ---
 
-## Testing
+## How This Fits Into the Bigger Picture
 
-### Integration Test — Rate Limit Exceeded
+Rate limiting doesn't stand alone — it works alongside several other existing protections: password hashing that makes each guess computationally slow, account lockout after repeated failures, and login error messages that don't reveal whether an email address is registered. Together these layers make automated attacks significantly harder.
 
-```csharp
-[Fact]
-public async Task Login_WhenRateLimitExceeded_Returns429()
-{
-    var client = _factory.CreateClient();
-
-    for (int i = 0; i < 11; i++)
-    {
-        var response = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { email = "test@example.com", password = "wrong" });
-
-        if (i < 10)
-        {
-            response.StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests);
-        }
-        else
-        {
-            response.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
-            var body = await response.Content.ReadAsStringAsync();
-            body.Should().Contain("Rate limit exceeded");
-        }
-    }
-}
-```
-
-### Integration Test — Normal Use Not Affected
-
-```csharp
-[Fact]
-public async Task Login_WithNormalUsage_IsNotRateLimited()
-{
-    var client = _factory.CreateClient();
-
-    // 3 attempts (well under limit)
-    for (int i = 0; i < 3; i++)
-    {
-        var response = await client.PostAsJsonAsync("/api/v1/auth/login",
-            new { email = "user@example.com", password = "Password1!" });
-
-        response.StatusCode.Should().NotBe(HttpStatusCode.TooManyRequests);
-    }
-}
-```
+**Impact on brute-force attacks:** The number of passwords an attacker can try per day drops by approximately 86% compared to before this change.
 
 ---
 
-## Security Impact
+## Known Limitations
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Max login attempts/min/IP | ∞ | 10 |
-| Max registration/hr/IP | ∞ | 5 |
-| Brute-force feasibility | ~100k passwords/day | ~14.4k passwords/day (86% reduction) |
-
-### Defence in Depth
-
-Rate limiting works alongside existing controls:
-1. **BCrypt cost factor 12** — each hash comparison takes ~250ms server-side
-2. **Account lockout** — 5 failed attempts locks the account for 15 minutes
-3. **No user enumeration** — login failures don't reveal whether the email exists
-4. **Rate limiting** (new) — caps requests per IP regardless of target account
-
-### Residual Risks & Tradeoffs
-
-- **Distributed attacks:** Botnet rotating IPs can still try 10 req/min per IP. Mitigation: add CAPTCHA after N failures (future work).
-- **Shared IPs:** Users behind corporate NAT share an IP — could hit the limit collectively. Mitigation: limit is generous (10/min) and configurable.
-- **Memory usage:** Counter store uses in-memory cache. For multi-instance deployments, switch to Redis-backed store.
+A few tradeoffs are worth being aware of. Attackers using a large network of different IP addresses can still make attempts across many IPs simultaneously — adding a CAPTCHA challenge after several failures is planned as a future improvement. Users sharing a single internet connection (such as in a large office) share the same IP limit, though the thresholds are generous enough that this is unlikely to cause issues in practice. Finally, the current implementation stores counters in memory, so for environments running multiple servers, this would need to be switched to a shared cache like Redis.
 
 ---
 
-## Documentation
+## Summary
 
-- Updated threat model with rate-limiting mitigation
-- Added ADR for rate-limiting approach
-- Updated API contract with 429 response documentation
+| Area | Detail |
+|------|--------|
+| **What it does** | Caps login and registration attempts per IP address |
+| **Login limit** | 10 attempts per minute |
+| **Registration limit** | 5 attempts per hour |
+| **Impact on real users** | None under normal use |
+| **Reduction in brute-force exposure** | ~86% |
+| **Residual risk** | Distributed botnet attacks; CAPTCHA planned as follow-up |

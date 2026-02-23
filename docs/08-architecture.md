@@ -1,6 +1,6 @@
 # C4 Architecture Diagrams: TaskHub
 
-**Date:** February 19, 2026  
+**Date:** February 23, 2026  
 
 ---
 

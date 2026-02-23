@@ -1,107 +1,65 @@
 # Release Notes & Operational Updates
 
-## 4. Release Notes (v1.2.0)
+## Release Notes (v1.2.0) — 2026-02-25
 
-```markdown
-# Release Notes - v1.2.0
+**Type:** Minor Release
 
-**Release Date:** 2026-02-25  
-**Type:** Minor Release  
+### What's New
 
-## 🚀 New Features
-
-### Priority Levels Enhancement
-- Added "Urgent" priority level for critical tasks
-- Priority hierarchy: Low < Medium < High < Urgent
-- Backward compatible with existing todos
-
-### Rate Limiting
-- Login endpoint: 10 requests/minute per IP
-- Registration endpoint: 5 requests/hour per IP
-- Returns 429 Too Many Requests when limit exceeded
-
-## 🐛 Bug Fixes
-
-### Archived Todos Filter
-- Fixed issue where archived todos appeared in default list
-- Now correctly respects `includeArchived` parameter
-- Affects: GET /api/v1/todos endpoint
-
-## 🔒 Security
-
-### Brute Force Protection Enhancement
-- Rate limiting on authentication endpoints
-- Mitigates distributed brute force attacks
-- Complements existing account lockout mechanism
-
-## 📊 Improvements
-
-### Performance
-- File repository caching improvements
-- Reduced disk I/O by 30% for read operations
-
-### Documentation
-- Added ADR for rate limiting decision
-- Updated threat model with mitigations
-
-## 🔄 Migration Notes
-
-### Schema Version
-- File storage schema upgraded from v2 → v3
-- Migration is automatic on first startup
-- No manual intervention required
-
-### Configuration
-Rate limiting can be customized via appsettings.json:
-```json
-{
-  "IpRateLimiting": {
-    "GeneralRules": [
-      {
-        "Endpoint": "POST:/api/v1/auth/login",
-        "Period": "1m",
-        "Limit": 10
-      }
-    ]
-  }
-}
-```
-
-## ⚠️ Breaking Changes
-
-None - this release is fully backward compatible.
-
-## 📦 Dependencies
-
-### Updated
-- AspNetCoreRateLimit: 5.0.0 (new)
-
-### No Changes
-- BCrypt.Net-Next: 5.0.0
-- Serilog.AspNetCore: 10.0.0
-
-## 🧪 Testing
-
-- 142 unit tests (all passing)
-- 38 integration tests (all passing)
-- Code coverage: 84%
-
-## 📝 Known Issues
-
-- File storage performance degrades with >10,000 todos (documented limitation)
-- No horizontal scaling support (file storage constraint)
-
-## 🔜 Next Release (v1.3.0)
-
-Planned features:
-- Advanced filtering (date ranges, multiple tags)
-- Batch operations (bulk delete, bulk archive)
-- WebSocket support for real-time updates
-
-## 📞 Support
-
-Report issues: https://github.com/taskhub/issues  
-Documentation: https://docs.taskhub.com  
-```
+#### Rate Limiting on Login & Registration
+- Login endpoint: max 10 requests per minute per IP address
+- Registration endpoint: max 5 requests per hour per IP address
+- When the limit is hit, the API returns `429 Too Many Requests` with a `Retry-After` header
+- This adds a second layer of protection on top of the existing account lockout (5 failed attempts locks the account for 15 minutes)
 
 ---
+
+## Release Notes (v1.1.0) — 2026-02-22
+
+**Type:** Minor Release
+
+### What's New
+
+#### Automatic Archive of Old Completed Todos
+- A background job now automatically archives todos that have been in the "Done" state for more than 90 days (configurable)
+- Archived todos are hidden from the default list but can still be viewed by adding `includeArchived=true` to the request
+- Archived todos can be restored by any org member
+- The job runs by default every 24 hours and logs how many todos it archived per organisation
+- The archive threshold and interval are configurable via `appsettings.json` under the `Archive` section
+
+#### Storage Schema Update
+- File storage schema upgraded from v1 to v2
+- Migration runs automatically on first startup — no manual steps needed
+
+---
+
+## Release Notes (v1.0.1) — 2026-02-20
+
+**Type:** Patch Release
+
+### Bug Fixes
+
+#### Rapid Todo Status Toggle Fixed
+- Rapidly clicking the toggle button caused the UI to show the wrong state until the page was refreshed
+- Root cause: the frontend was hardcoding `version = 1` instead of using the version returned by the server
+- Fix: the frontend now syncs the version from the API response, debounces rapid clicks, and rolls back to the correct server state if a conflict (412) is returned
+
+---
+
+## Release Notes (v1.0.0) — 2026-02-19
+
+**Type:** Initial Release
+
+### What's Included
+
+- Multi-tenant todo management: create organisations, invite members, manage todos per org
+- Authentication: username/password login with BCrypt hashing (cost 12) and brute force lockout
+- Role-based access: Member and OrgAdmin roles
+- Todo features: create, update, toggle status, soft delete, restore, hard delete (admin only)
+- Optimistic concurrency: every todo has a version number; conflicting updates return a 412 response
+- Import & export: todos can be exported to JSON or CSV, and imported from JSON with row-level error reporting
+- Audit log: all significant actions (login, logout, todo changes, org changes) are recorded and viewable by OrgAdmins
+- Two storage modes: InMemory (for development) and File-based with atomic writes and schema migrations
+- Health check endpoints (liveness + readiness)
+- Structured logging with Serilog and correlation IDs on every request
+- React frontend with organisation switching, todo list with filtering/sorting/pagination, and optimistic status toggle

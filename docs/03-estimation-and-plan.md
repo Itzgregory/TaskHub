@@ -1,84 +1,30 @@
 # Estimation Approach & Delivery Plan
 
-**Project:** TaskHub  
-**Date:** 2026-02-19  
+**Project:** TaskHub
+**Date:** February 23, 2026
 
 ---
 
-## Estimation Method: T-Shirt Sizes
+## How Work Was Estimated
 
-We use **T-shirt sizing** (XS, S, M, L, XL) to estimate effort for each backlog item.
-
-| Size | Rough Hours | Description |
-|------|-------------|-------------|
-| **XS** | 1–2h | Config change, copy update, single-file fix |
-| **S** | 2–4h | Single feature with tests, one layer touched |
-| **M** | 4–8h | Feature spanning 2–3 layers, multiple tests |
-| **L** | 1–2 days | Cross-cutting concern, migration, multi-file |
-| **XL** | 2–4 days | New subsystem, major refactor, E2E flow |
-
-### How We'd Use This in a Team
-
-1. **Backlog refinement** — team reviews items, discusses scope, assigns T-shirt size
-2. **Sprint planning** — convert sizes to capacity: S=0.5 day, M=1 day, L=2 days, XL=3 days
-3. **Velocity tracking** — measure completed sizes per sprint, adjust future capacity
-4. **Scope negotiation** — if sprint is overloaded, defer L/XL items first
+Each task was sized using a simple t-shirt sizing system rather than trying to estimate exact hours upfront. Sizes range from XS (a quick fix, roughly 1–2 hours) up to XL (a major piece of work, 2–4 days). This keeps planning focused on relative complexity rather than false precision.
 
 ---
 
 ## Delivery Plan
 
-### Week 1: Foundation (MVP Core)
+The project was completed solo in one week, with work organised into four broad phases.
 
-| Day | Focus | Items |
-|-----|-------|-------|
-| Mon | Project setup, architecture scaffolding | Clean Architecture layers, InMemory storage |
-| Tue | Auth (register, login, logout, sessions) | BCrypt hashing, cookie config, session store |
-| Wed | Org management (create, membership, switching) | Multi-tenant enforcement, RBAC |
-| Thu | Todo CRUD (create, read, update, list) | Validation, optimistic concurrency |
-| Fri | Todo lifecycle (toggle, soft delete, restore) | Hard delete (OrgAdmin), filters/sort/pagination |
+**Days 1–2: Foundation.** Architecture scaffolding, authentication (register, login, logout, sessions), organisation management with full tenant isolation, and role-based access control.
 
-**Checkpoint:** Design review — API contract + data model
+**Days 3–4: Core Features.** Full task management including creation, editing, listing, status toggling, soft delete, restore, and hard delete for admins. Optimistic concurrency, filters, sorting, and pagination.
 
-### Week 2: Security + Quality
+**Days 5–6: Security & Quality.** Audit logging, import/export with validation, file-based storage with atomic writes and schema migration, rate limiting, CSRF protection, and the unit and integration test suite.
 
-| Day | Focus | Items |
-|-----|-------|-------|
-| Mon | Audit logging (all event types) | CorrelationId, structured logging |
-| Tue | Import/Export with validation | Rejection reporting, idempotency |
-| Wed | File storage (atomic writes, locking) | Schema versioning, v1→v2 migration |
-| Thu | Security hardening | Rate limiting, user enumeration prevention, CSRF |
-| Fri | Testing (unit + integration) | Permission checks, concurrency, multi-tenant |
-
-**Checkpoint:** Security review — threat model + mitigations
-
-### Week 3: Frontend + Polish
-
-| Day | Focus | Items |
-|-----|-------|-------|
-| Mon | Frontend: auth screens, org selection | Login, register, org switching |
-| Tue | Frontend: todo list, filters, pagination | Create/edit form, optimistic toggle |
-| Wed | Frontend: error states, loading, accessibility | Keyboard navigation, labels, error messages |
-| Thu | E2E tests (Flow A + Flow B) | CI pipeline setup |
-| Fri | Documentation, maintenance tasks | ADRs, bugfix, archive, rate limiting |
-
-**Checkpoint:** Pre-release review — full test suite green, docs complete
-
-### Week 4: Hardening + Handover
-
-| Day | Focus | Items |
-|-----|-------|-------|
-| Mon | Bug fixes, edge cases | Toggle race condition, archive filtering |
-| Tue | Performance review, file storage load testing | Health checks, readiness probe |
-| Wed | Release notes, CHANGELOG, post-incident report | Maintenance deliverables |
-| Thu | README polish, troubleshooting guide | Final doc review |
-| Fri | **Handover** | Demo, Q&A, submission |
+**Day 7: Frontend, Polish & Handover.** Authentication screens, task list UI with filters and optimistic updates, error and loading states, accessibility basics, CI pipeline, documentation, and final submission.
 
 ---
 
-## Risk-Adjusted Schedule
+## Planning Notes
 
-- **Buffer:** 20% of each week reserved for unplanned work
-- **Critical path:** Auth → Multi-tenant → Todo CRUD → Concurrency → File Storage
-- **Parallelisable:** Frontend can begin after API contract is stable (mid-Week 2)
-- **Dependencies:** File storage migration depends on base schema being finalised
+Given the one-week constraint, the critical path was kept tight: authentication → multi-tenancy → task management → concurrency → file storage. Larger or lower-priority items were deprioritised if they risked blocking the core flow. Everything was built and tested by the same person, so there were no handoff delays — but also no slack for unexpected blockers.

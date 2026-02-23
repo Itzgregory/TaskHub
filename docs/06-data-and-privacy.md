@@ -1,82 +1,41 @@
-# Data Classification & Privacy Note
+# Data Classification & Privacy: TaskHub
 
-**Project:** TaskHub  
-**Date:** 2026-02-19  
-
----
-
-## What Data We Store
-
-| Entity | Fields | Classification |
-|--------|--------|----------------|
-| **User** | `Id`, `Email`, `PasswordHash`, `CreatedAt` | Contains PII |
-| **Organisation** | `Id`, `Name`, `CreatedAt` | Internal |
-| **Membership** | `UserId`, `OrgId`, `Role`, `JoinedAt` | Internal |
-| **TodoItem** | `Id`, `OrgId`, `CreatedByUserId`, `Title`, `Description`, `Status`, `Priority`, `Tags`, `DueDate`, `Version`, `IsDeleted`, `IsArchived`, timestamps | May contain PII in free-text fields |
-| **AuditEntry** | `Id`, `OrgId`, `ActorUserId`, `Action`, `EntityType`, `EntityId`, `CorrelationId`, `Timestamp` | Internal (references PII via IDs) |
-| **Session** | `SessionId`, `UserId`, `CreatedAt`, `ExpiresAt` | Security-sensitive |
+**Date:** February 23, 2026
 
 ---
 
-## What Is PII
+## What Gets Stored and Why It Matters
 
-| Field | PII? | Justification |
-|-------|------|---------------|
-| `User.Email` | ✅ Yes | Directly identifies a person |
-| `User.PasswordHash` | ✅ Yes (derived) | Derived from user's password — must be protected |
-| `TodoItem.Title` | ⚠️ Potentially | Free-text — user may include personal information |
-| `TodoItem.Description` | ⚠️ Potentially | Free-text — user may include personal information |
-| `TodoItem.Tags` | ⚠️ Potentially | Free-text — user may include personal information |
-| `AuditEntry.ActorUserId` | ✅ Yes (indirect) | Links to a User record; can identify the person |
-| All other fields | ❌ No | System-generated IDs, timestamps, enums |
+Not all data carries the same sensitivity, so it's worth being clear about what's stored and how carefully each piece needs to be handled.
 
----
+**User accounts** hold an email address and a hashed password — both sensitive. The email directly identifies a person; the password hash, while not the password itself, still needs to be protected.
 
-## Retention Expectations
+**Tasks** are trickier. The structured fields (status, priority, due date) are harmless on their own, but the free-text fields — title, description, and tags — can contain anything a user chooses to type, including personal information. This is treated as potentially sensitive.
 
-| Data | Retention Policy | Rationale |
-|------|-----------------|-----------|
-| **Active todos** | Indefinite while org exists | User-managed lifecycle |
-| **Archived todos** | 90 days after archival, then available for hard delete | Configurable via `ARCHIVE_AFTER_DAYS` |
-| **Soft-deleted todos** | Indefinite until hard-deleted by OrgAdmin | Allows recovery |
-| **Audit logs** | 90 days (configurable) | Compliance + debugging |
-| **Sessions** | Until logout or expiry (configurable idle timeout) | Security best practice |
-| **User accounts** | Until explicitly deleted | GDPR right to erasure (future) |
+**Audit log entries** don't store personal details directly, but they reference user IDs, which link back to real people. Sensitive by association.
 
-### Future Considerations
+**Sessions** are security-critical. A valid session token is effectively a key to someone's account.
 
-- Implement account deletion (GDPR Article 17 "right to erasure")
-- Implement data export for users (GDPR Article 20 "right to portability")
-- Add privacy policy acceptance flow at registration
+**Organisations and memberships** are internal operational data with no direct personal information.
 
 ---
 
-## What We Intentionally Do NOT Store or Log
+## How Long Data Is Kept
 
-| Item | Reason |
-|------|--------|
-| **Plaintext passwords** | Only BCrypt hash stored; never logged |
-| **Full session tokens** | Only first 8 characters appear in logs (for correlation) |
-| **Request bodies for auth endpoints** | Login/register payloads excluded from request logging |
-| **Full IP addresses in audit logs** | IPs used transiently for rate limiting; not persisted |
-| **Browser fingerprints** | Not collected |
-| **Third-party tracking** | No analytics or telemetry SDKs |
-| **Stack traces in API responses** | Never exposed to clients; logged server-side only |
+Active tasks stay for as long as the organisation exists — their lifecycle is user-managed. Archived tasks are available for permanent deletion after 90 days. Soft-deleted tasks stay recoverable until an admin permanently removes them. Audit logs are kept for 90 days by default. Sessions are cleared on logout or expiry. User accounts remain until explicitly deleted.
+
+GDPR right-to-erasure (account deletion) and right-to-portability (personal data export) are not yet implemented but are noted as future requirements.
 
 ---
 
-## Data Flow Summary
+## What Is Deliberately Not Stored
 
-```
-User Browser
-    ↓ (HTTPS, SameSite=Strict cookie)
-API Gateway / Middleware
-    ↓ (correlationId injected)
-Controllers → Application Layer → Domain
-    ↓
-Storage (InMemory or File)
-    ↓
-Audit Log (append-only, org-scoped)
-```
+A few things were consciously left out:
 
-All data at rest is stored as JSON files (File provider) or in-process dictionaries (InMemory provider). No data leaves the server unless explicitly exported by the user.
+Passwords are never stored in plain text — only the BCrypt hash. Session tokens are never written to logs in full, only the first 8 characters for tracing purposes. Login and registration request bodies are excluded from request logging entirely. IP addresses are used temporarily for rate limiting but never persisted. No browser fingerprinting, no analytics SDKs, no third-party tracking of any kind. Stack traces never appear in API responses — they're logged server-side only.
+
+---
+
+## How Data Moves Through the System
+
+A request comes in over HTTPS with a secure, same-site cookie. The API attaches a correlation ID and passes the request through the application logic down to storage — either in-memory during development or JSON files in production. Every significant action along the way is written to the append-only audit log, scoped to the relevant organisation. No data leaves the server unless a user explicitly triggers an export.

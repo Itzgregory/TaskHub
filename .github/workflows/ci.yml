@@ -1,0 +1,169 @@
+name: TaskHub CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '24.x'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore server/TaskHub.slnx
+      
+    - name: Build solution
+      run: dotnet build server/TaskHub.slnx --configuration Release --no-restore
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: server/src/TaskHub.Api/bin/Release/
+        
+  test:
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore server/TaskHub.slnx
+      
+    - name: Run unit tests
+      run: dotnet test server/tests/TaskHub.UnitTests/TaskHub.UnitTests.csproj --logger "trx;LogFileName=unit-tests.trx"
+      
+    - name: Run integration tests
+      run: dotnet test server/tests/TaskHub.IntegrationTests/TaskHub.IntegrationTests.csproj --logger "trx;LogFileName=integration-tests.trx"
+      
+    - name: Generate coverage report
+      run: |
+        dotnet test server/TaskHub.slnx \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./coverage
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./coverage/**/coverage.cobertura.xml
+        fail_ci_if_error: true
+        
+    - name: Check coverage threshold
+      run: |
+        coverage=$(grep -oP 'line-rate="\K[0-9.]+' coverage/**/coverage.cobertura.xml | head -1)
+        if (( $(echo "$coverage < 0.80" | bc -l) )); then
+          echo "Coverage $coverage is below 80% threshold"
+          exit 1
+        fi
+        
+  security:
+    name: Security Scan
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Check for vulnerable packages
+      run: |
+        dotnet list server/TaskHub.slnx package --vulnerable --include-transitive 2>&1 | tee vulnerable.txt
+        if grep -q "has the following vulnerable packages" vulnerable.txt; then
+          echo "Vulnerable packages found"
+          exit 1
+        fi
+        
+    - name: Run OWASP Dependency Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'TaskHub'
+        path: './server'
+        format: 'HTML'
+        
+    - name: Upload dependency check results
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-check-report
+        path: dependency-check-report.html
+        
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Check code formatting
+      run: dotnet format server/TaskHub.slnx --verify-no-changes
+      
+  deploy-dev:
+    name: Deploy to Dev
+    needs: [test, security, lint]
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: development
+    
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        
+    - name: Deploy to dev server
+      run: |
+        echo "Deploying to dev environment..."
+        # rsync or scp to dev server
+        # systemctl restart taskhub-api
+        
+  deploy-prod:
+    name: Deploy to Production
+    needs: [test, security, lint]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-artifacts
+        
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production..."
+        # Blue-green deployment script
+        # Health check before switching

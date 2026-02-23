@@ -1,119 +1,59 @@
-# Post-Incident Report
+# Incident Report: Audit Log Gap
 
-## 5. Post-Incident Report
+**Incident ID:** INC-2026-001
+**Date:** 2026-02-26
+**Duration:** 2 hours 45 minutes (06:00 – 08:45 UTC)
+**Severity:** High
+**Impact:** Audit trail incomplete for the affected window; no service disruption
 
-### Incident: Production Outage Due to Disk Full
 
-**Incident ID:** INC-2026-001  
-**Date:** 2026-02-26  
-**Duration:** 2 hours 15 minutes (14:00 - 16:15 UTC)  
-**Severity:** Critical  
-**Impact:** Complete service outage  
 
----
+## What Happened
 
-### Timeline
+During a routine morning review, I noticed the audit log had no entries between 06:00 and 08:45 UTC. The app was running fine the whole time, but around 170 actions taken during that window weren't recorded. The gap was caught the same day and resolved within an hour of being noticed.
 
-**14:00** - Monitoring alerts: API health check failing  
-**14:02** - On-call engineer investigates, finds 500 errors  
-**14:05** - Logs show: "No space left on device"  
-**14:10** - Disk usage check: 100% used on `/var/data`  
-**14:15** - Incident escalated to senior engineer  
-**14:20** - Root cause identified: Audit log file grew to 50GB  
-**14:30** - Emergency mitigation: Truncate old audit entries  
-**14:45** - Free space recovered, service restarted  
-**15:00** - Service operational, monitoring for stability  
-**15:30** - Implement log rotation configuration  
-**16:15** - Incident closed  
 
----
 
-### Root Cause
+## Root Cause
 
-**Immediate Cause:**  
-Audit log file (`audit.json`) grew unbounded. No log rotation configured. After 3 months of operation with high activity, file size exceeded available disk space.
+The audit log is written to a file, protected by a lock to prevent overlapping writes. During a busier-than-usual period, the background archive job and several incoming requests competed for that lock at the same time. When the lock timed out, the code caught the error quietly and moved on as if nothing had happened — so writes were silently failing for nearly three hours with no visible sign anything was wrong.
 
-**Contributing Factors:**
-1. No disk space monitoring alerts
-2. No log rotation policy
-3. No archive/purge strategy for old audit entries
-4. Insufficient disk capacity planning
 
----
 
-### Impact Assessment
+## Timeline
 
-**Users Affected:** 100% (all users)  
-**Requests Failed:** ~12,000 requests  
-**Data Lost:** None (all writes failed gracefully)  
-**Revenue Impact:** N/A (internal tool)  
+**06:00** – Audit writes begin silently failing
+**08:45** – Logging resumes on its own
+**09:00** – I notice the gap during routine review
+**09:30** – Root cause identified
+**10:00** – Fix deployed and confirmed working
+**10:30** – Incident closed; data recovery begins
 
----
 
-### Resolution
 
-**Immediate Fix:**
-```bash
-# Backup audit log
-cp /var/data/taskhub/audit.json /var/backups/audit-2026-02-26.json
+## Impact
 
-# Keep only last 30 days of audit entries
-jq '.auditEntries |= map(select(.timestamp > "2026-01-27"))' \
-  /var/data/taskhub/audit.json > /tmp/audit-trimmed.json
+- ~170 audit entries lost
+- No task or organisation data was affected
+- No indication of any malicious activity during the gap — this was purely a software defect
 
-mv /tmp/audit-trimmed.json /var/data/taskhub/audit.json
 
-# Restart service
-systemctl restart taskhub-api
-```
 
-**Long-term Fix:**
-1. Implemented log rotation (daily, keep 90 days)
-2. Added disk space monitoring (alert at 80%)
-3. Scheduled monthly audit log archival to S3
-4. Increased disk capacity from 50GB → 200GB
+## What Was Fixed
 
----
+The audit write code was patched to stop hiding failures — errors now surface properly instead of being swallowed. If an audit write fails, the request fails too, because a broken audit trail isn't acceptable to silently ignore. A startup check was also added to confirm the audit log is writable when the app launches, and an hourly comparison between request count and audit entry count now alerts if the numbers drift too far apart.
 
-### Preventive Measures
+Data recovery was done by cross-referencing the separate request logs to reconstruct the most important missing entries — primarily logins and admin actions.
 
-**Implemented:**
-- ✅ Logrotate configuration for all JSON files
-- ✅ Disk usage monitoring with alerts
-- ✅ Audit log retention policy (90 days)
-- ✅ Weekly backup of audit logs to S3
 
-**Planned:**
-- ⏳ Pagination in audit log retrieval
-- ⏳ Compress archived audit logs
-- ⏳ Circuit breaker pattern to fail gracefully when disk full
 
----
+## Planned Improvements
 
-### Lessons Learned
+- Replace the file-locking approach with an append-only write strategy to eliminate the contention problem at its root
+- Add a real-time alert if no audit entries are recorded while the app is known to be active
 
-**What Went Well:**
-- Fast detection (2 minutes to alert)
-- Clear error messages helped diagnosis
-- No data corruption
-- Backup strategy prevented data loss
 
-**What Went Wrong:**
-- No proactive monitoring of disk usage
-- Log rotation should have been configured from day 1
-- Runbook didn't cover disk full scenario
 
-**Action Items:**
-1. Add disk monitoring to all production checklist
-2. Update runbooks with disk full procedure
-3. Conduct DR drill for storage failures
-4. Review all unbounded growth vectors (todos, orgs, sessions)
+## Lessons Learned
 
----
-
-### Follow-up
-
-**Post-Mortem Meeting:** 2026-02-27 10:00 UTC  
-**Attendees:** DevOps, Development, Product  
-**Action Item Owner:** DevOps Lead  
-**Review Date:** 2026-03-26 (1 month check-in)  
+The core problem was that a critical write path was allowed to fail silently. That's a straightforward mistake that shouldn't have made it through — audit failures need to be loud. On the positive side, having separate request logs as a backup made partial recovery possible, and daily log review meant the gap was caught quickly rather than days later.

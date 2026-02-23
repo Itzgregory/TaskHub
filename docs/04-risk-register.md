@@ -1,427 +1,57 @@
 # Risk Register: TaskHub
 
-**Last Updated:** February 19, 2026  
-**Total Risks Identified:** 12  
-**Critical/High Risks:** 4  
+**Last Updated:** February 23, 2026
+**Risks Identified:** 12
 
 ---
 
-## Risk Assessment Matrix
+## Overview
 
-| Likelihood | Impact | Risk Level |
-|------------|--------|------------|
-| High | High | 🔴 Critical |
-| High | Medium | 🟠 High |
-| Medium | High | 🟠 High |
-| Medium | Medium | 🟡 Medium |
-| Low | High | 🟡 Medium |
-| Low | Medium | 🟢 Low |
+12 risks were identified across technical, security, and operational areas. One was considered critical, three high, six medium, and two low priority.
 
 ---
 
-## Risk 1: File Storage Corruption
+## The Risks
 
-**ID:** RISK-001  
-**Category:** Technical  
-**Likelihood:** Medium  
-**Impact:** High  
-**Risk Level:** 🟠 High  
+**File Storage Corruption** (High) — Because data is stored in flat JSON files rather than a proper database, a crash during a write could corrupt the file entirely. This is partially mitigated by writing to a temporary file first and only replacing the real file once the write succeeds, plus per-file locking to prevent two things writing at the same time. Checksums and automated backups are still planned.
 
-**Description:**  
-Concurrent writes to JSON files could corrupt data if file locking fails or crashes occur mid-write.
+**No Database Transactions** (Medium) — Operations that touch multiple files at once — like creating an organisation and its first membership — could partially fail, leaving the data in an inconsistent state. Cross-file operations are minimised and handlers are made idempotent where possible, but a more robust solution is still planned.
 
-**Impact:**  
-- Complete data loss for affected entity type
-- System becomes unusable
-- No automatic recovery mechanism
+**Brute Force Login Attacks** (Critical) — Automated scripts could hammer the login endpoint trying thousands of passwords. Account lockout after 5 failed attempts is already in place, along with a consistent error message that doesn't reveal whether an email address exists. Rate limiting and CAPTCHA are still to be added.
 
-**Mitigation Strategy:**
-1. ✅ **Implemented:** Atomic writes (write to .tmp, rename on success)
-2. ✅ **Implemented:** Per-file SemaphoreSlim locks prevent concurrent access
-3. ✅ **Implemented:** Schema versioning enables detection of corruption
-4. ⏳ **Planned:** Add file integrity checksums
-5. ⏳ **Planned:** Automated backup to separate directory every 6 hours
+**Session Hijacking** (High) — A stolen session token would give an attacker full access to a user's account. Secure cookie configuration (HTTP-only, Secure flag, SameSite) and session expiry are all planned but not yet implemented. This is the highest priority item before any production deployment.
 
-**Residual Risk:** 🟡 Medium  
-**Owner:** Lead Developer  
-**Status:** Partially Mitigated
+**Insufficient Input Validation** (Medium) — Malformed or malicious input could cause unexpected behaviour. Validation is in place at both the domain and application layers, with length limits and format checks throughout. Risk is considered well mitigated at this stage.
 
----
+**Concurrent Edits Overwriting Each Other** (Low) — Two users editing the same task at the same time could result in one person's changes being silently lost. Fully mitigated through optimistic concurrency — every update checks a version number and rejects stale requests with a clear error.
 
-## Risk 2: No Database Transactions
+**Audit Log Tampering** (Medium) — Someone with direct file access could edit or delete audit records. The audit log is append-only in the application code, so no update or delete operations exist. Cryptographic signatures and forwarding logs to an external service are planned for stronger guarantees.
 
-**ID:** RISK-002  
-**Category:** Technical  
-**Likelihood:** Medium  
-**Impact:** Medium  
-**Risk Level:** 🟡 Medium  
+**Scalability Limits** (Medium) — File-based storage doesn't scale horizontally and will slow down with very large datasets. This is an accepted limitation for an MVP. The storage layer is abstracted behind a repository interface specifically to make a future switch to PostgreSQL straightforward.
 
-**Description:**  
-File storage doesn't support ACID transactions. Operations spanning multiple files (e.g., create org + membership) could partially fail.
+**Dependency Vulnerabilities** (Medium) — Third-party packages could have known security vulnerabilities. The latest stable versions are in use, and automated vulnerability scanning in CI is planned.
 
-**Impact:**  
-- Orphaned data (org exists but no membership)
-- Inconsistent state requiring manual cleanup
-- User confusion
+**Unhandled Exceptions** (Low) — Crashes or unexpected errors could expose internal details or bring the API down. Fully mitigated through global exception handling middleware, structured error responses following the RFC 9457 standard, and no stack traces in production.
 
-**Mitigation Strategy:**
-1. ✅ **Implemented:** Minimize cross-file operations in single use case
-2. ✅ **Implemented:** Handlers are idempotent where possible
-3. ⏳ **Planned:** Implement saga pattern for multi-file operations
-4. ⏳ **Planned:** Add data consistency validation in health check
+**No Backup Strategy** (Medium) — There are no automated backups. A hardware failure or accidental deletion would mean permanent data loss. Automated daily backups and a documented recovery procedure are planned but not yet in place.
 
-**Residual Risk:** 🟡 Medium  
-**Owner:** Lead Developer  
-**Status:** Partially Mitigated
+**Insufficient Documentation** (Low) — Poor documentation makes a system hard to maintain. Well mitigated — architecture documentation, decision records, inline comments, and API docs are all in place.
 
 ---
 
-## Risk 3: Brute Force Authentication Attacks
+## Top Priorities Before Production
 
-**ID:** RISK-003  
-**Category:** Security  
-**Likelihood:** High  
-**Impact:** High  
-**Risk Level:** 🔴 Critical  
-
-**Description:**  
-Attackers could attempt credential stuffing or brute force attacks against login endpoint.
-
-**Impact:**  
-- Unauthorized account access
-- Account lockouts (DoS for legitimate users)
-- Reputational damage
-
-**Mitigation Strategy:**
-1. ✅ **Implemented:** Account lockout after 5 failed attempts
-2. ✅ **Implemented:** 15-minute lockout duration
-3. ✅ **Implemented:** Same error message for invalid username and wrong password
-4. ⏳ **Planned:** Rate limiting on login endpoint (10 req/min per IP)
-5. ⏳ **Planned:** CAPTCHA after 3 failed attempts
-6. ⏳ **Planned:** Alert admins of suspicious login patterns
-
-**Residual Risk:** 🟡 Medium  
-**Owner:** Security Team  
-**Status:** Partially Mitigated
+1. **Session hijacking** — secure cookie configuration must be in place before going live
+2. **Brute force protection** — rate limiting needs to be added to complement the existing lockout
+3. **File storage corruption** — checksums and automated backups to be added shortly after MVP
 
 ---
 
-## Risk 4: Session Hijacking
-
-**ID:** RISK-004  
-**Category:** Security  
-**Likelihood:** Medium  
-**Impact:** High  
-**Risk Level:** 🟠 High  
-
-**Description:**  
-Attackers could steal session tokens via XSS, network sniffing, or physical access to user's device.
-
-**Impact:**  
-- Unauthorized access to user's account
-- Data exfiltration
-- Malicious actions performed as victim
-
-**Mitigation Strategy:**
-1. ⏳ **Planned:** HTTP-only cookies (prevent XSS access)
-2. ⏳ **Planned:** Secure flag on cookies (HTTPS only)
-3. ⏳ **Planned:** SameSite=Strict cookie attribute
-4. ⏳ **Planned:** Session expiry (24 hours)
-5. ⏳ **Planned:** Regenerate session ID on login
-6. ⏳ **Planned:** Log session creation from new IP addresses
-
-**Residual Risk:** 🟠 High  
-**Owner:** Security Team  
-**Status:** Not Yet Mitigated
-
----
-
-## Risk 5: Insufficient Input Validation
-
-**ID:** RISK-005  
-**Category:** Security  
-**Likelihood:** Medium  
-**Impact:** Medium  
-**Risk Level:** 🟡 Medium  
-
-**Description:**  
-Missing or incomplete validation could allow injection attacks, buffer overflows, or data corruption.
-
-**Impact:**  
-- SQL injection (if database is later added)
-- Path traversal attacks
-- Malformed data in storage
-- XSS if data displayed in web UI
-
-**Mitigation Strategy:**
-1. ✅ **Implemented:** Validation at domain entity level (Tag, Email value objects)
-2. ✅ **Implemented:** Validation at use case level (validators for each command)
-3. ✅ **Implemented:** Length limits on all string fields
-4. ✅ **Implemented:** Regex validation for tags and emails
-5. ⏳ **Planned:** Content Security Policy headers
-6. ⏳ **Planned:** Automated security testing with OWASP ZAP
-
-**Residual Risk:** 🟢 Low  
-**Owner:** Lead Developer  
-**Status:** Well Mitigated
-
----
-
-## Risk 6: Lost Updates Due to Concurrency
-
-**ID:** RISK-006  
-**Category:** Technical  
-**Likelihood:** Low  
-**Impact:** Medium  
-**Risk Level:** 🟢 Low  
-
-**Description:**  
-Two users editing the same todo simultaneously could result in one user's changes being overwritten.
-
-**Impact:**  
-- Data loss for one user
-- User frustration
-- Reduced trust in system
-
-**Mitigation Strategy:**
-1. ✅ **Implemented:** Optimistic concurrency with version field
-2. ✅ **Implemented:** ETag headers for HTTP-level concurrency
-3. ✅ **Implemented:** 412 Precondition Failed on version mismatch
-4. ✅ **Implemented:** Clear error messages instructing user to reload
-
-**Residual Risk:** 🟢 Low  
-**Owner:** Lead Developer  
-**Status:** Fully Mitigated
-
----
-
-## Risk 7: Audit Log Tampering
-
-**ID:** RISK-007  
-**Category:** Security / Compliance  
-**Likelihood:** Low  
-**Impact:** High  
-**Risk Level:** 🟡 Medium  
-
-**Description:**  
-Malicious admin or attacker with file access could modify audit logs to hide unauthorized actions.
-
-**Impact:**  
-- Loss of compliance evidence
-- Unable to trace security incidents
-- Regulatory penalties
-
-**Mitigation Strategy:**
-1. ✅ **Implemented:** Audit entries are immutable (no update/delete in domain)
-2. ✅ **Implemented:** Append-only audit repository
-3. ⏳ **Planned:** Cryptographic signatures on audit entries
-4. ⏳ **Planned:** Separate audit file with stricter permissions
-5. ⏳ **Planned:** Forward audit logs to immutable external service (e.g., S3)
-
-**Residual Risk:** 🟡 Medium  
-**Owner:** Security Team  
-**Status:** Partially Mitigated
-
----
-
-## Risk 8: Scalability Limitations
-
-**ID:** RISK-008  
-**Category:** Technical  
-**Likelihood:** Medium  
-**Impact:** Medium  
-**Risk Level:** 🟡 Medium  
-
-**Description:**  
-File storage does not scale horizontally. Large files slow down read/write operations. No support for clustering.
-
-**Impact:**  
-- Performance degradation with >10,000 todos
-- Single point of failure (one server only)
-- Cannot handle high concurrent user load
-
-**Mitigation Strategy:**
-1. ✅ **Implemented:** InMemory option for development/testing
-2. ⏳ **Planned:** Document migration path to PostgreSQL
-3. ⏳ **Planned:** Repository abstraction allows swapping storage
-4. ⏳ **Planned:** Load testing to establish limits
-5. ⏳ **Planned:** Document "not recommended for >50 users"
-
-**Residual Risk:** 🟡 Medium (Accepted for MVP)  
-**Owner:** Product Owner  
-**Status:** Accepted Risk
-
----
-
-## Risk 9: Dependency Vulnerabilities
-
-**ID:** RISK-009  
-**Category:** Security  
-**Likelihood:** Medium  
-**Impact:** Medium  
-**Risk Level:** 🟡 Medium  
-
-**Description:**  
-NuGet packages could have known vulnerabilities (e.g., BCrypt.Net, Serilog).
-
-**Impact:**  
-- Remote code execution
-- Data breaches
-- Supply chain attack
-
-**Mitigation Strategy:**
-1. ✅ **Implemented:** Using latest stable package versions
-2. ⏳ **Planned:** Enable Dependabot/NuGet vulnerability alerts
-3. ⏳ **Planned:** Run `dotnet list package --vulnerable` in CI
-4. ⏳ **Planned:** Monthly dependency review process
-5. ⏳ **Planned:** Automated PRs for security patches
-
-**Residual Risk:** 🟡 Medium  
-**Owner:** DevOps Team  
-**Status:** Partially Mitigated
-
----
-
-## Risk 10: Insufficient Error Handling
-
-**ID:** RISK-010  
-**Category:** Technical  
-**Likelihood:** Low  
-**Impact:** Medium  
-**Risk Level:** 🟢 Low  
-
-**Description:**  
-Unhandled exceptions could crash the API or leak sensitive information in error responses.
-
-**Impact:**  
-- Service downtime
-- Exposure of stack traces, file paths, or internal details
-- Poor user experience
-
-**Mitigation Strategy:**
-1. ✅ **Implemented:** Global exception handling middleware
-2. ✅ **Implemented:** Domain exceptions mapped to HTTP status codes
-3. ✅ **Implemented:** Problem Details (RFC 9457) format for errors
-4. ✅ **Implemented:** Structured logging with correlation IDs
-5. ✅ **Implemented:** No stack traces in production responses
-
-**Residual Risk:** 🟢 Low  
-**Owner:** Lead Developer  
-**Status:** Fully Mitigated
-
----
-
-## Risk 11: Missing Backup Strategy
-
-**ID:** RISK-011  
-**Category:** Operational  
-**Likelihood:** Low  
-**Impact:** High  
-**Risk Level:** 🟡 Medium  
-
-**Description:**  
-File storage has no automated backup. Hardware failure or accidental deletion could result in permanent data loss.
-
-**Impact:**  
-- Complete data loss
-- No disaster recovery option
-- Business continuity failure
-
-**Mitigation Strategy:**
-1. ⏳ **Planned:** Automated daily backups to separate directory
-2. ⏳ **Planned:** Backup retention policy (7 days)
-3. ⏳ **Planned:** Backup verification (restore test monthly)
-4. ⏳ **Planned:** Document manual backup procedure
-5. ⏳ **Planned:** Export feature allows users to create their own backups
-
-**Residual Risk:** 🟡 Medium  
-**Owner:** Operations Team  
-**Status:** Not Yet Mitigated
-
----
-
-## Risk 12: Inadequate Documentation
-
-**ID:** RISK-012  
-**Category:** Operational  
-**Likelihood:** Low  
-**Impact:** Medium  
-**Risk Level:** 🟢 Low  
-
-**Description:**  
-Insufficient documentation could make system difficult to maintain, extend, or troubleshoot.
-
-**Impact:**  
-- Knowledge loss when developer leaves
-- Longer onboarding time for new developers
-- Costly mistakes during maintenance
-
-**Mitigation Strategy:**
-1. ✅ **Implemented:** Comprehensive ARCHITECTURE-README.md
-2. ✅ **Implemented:** 10+ ADRs documenting key decisions
-3. ✅ **Implemented:** Inline code comments for complex logic
-4. ✅ **Implemented:** OpenAPI/Swagger documentation
-5. ⏳ **Planned:** Video walkthrough of codebase
-6. ⏳ **Planned:** Runbook for common operations
-
-**Residual Risk:** 🟢 Low  
-**Owner:** Lead Developer  
-**Status:** Well Mitigated
-
----
-
-## Risk Summary Dashboard
-
-| Risk Level | Count | Percentage |
-|------------|-------|------------|
-| 🔴 Critical | 1 | 8% |
-| 🟠 High | 3 | 25% |
-| 🟡 Medium | 6 | 50% |
-| 🟢 Low | 2 | 17% |
-| **Total** | **12** | **100%** |
-
----
-
-## Top 3 Priority Risks to Address
-
-1. **RISK-004: Session Hijacking** 🔴 Critical
-   - Action: Implement secure cookie configuration
-   - Deadline: Before production deployment
-   - Owner: Security Team
-
-2. **RISK-003: Brute Force Attacks** 🔴 Critical
-   - Action: Add rate limiting and CAPTCHA
-   - Deadline: Before production deployment
-   - Owner: Security Team
-
-3. **RISK-001: File Storage Corruption** 🟠 High
-   - Action: Add checksums and automated backups
-   - Deadline: Within 2 weeks of MVP
-   - Owner: Lead Developer
-
----
-
-## Risk Review Schedule
-
-- **Weekly:** Review critical/high risks during standup
-- **Bi-weekly:** Update risk register with new risks
-- **Monthly:** Full risk assessment with stakeholders
-- **Quarterly:** Risk response effectiveness review
-
----
-
-## Acceptance Criteria for Risk Closure
-
-A risk can be marked as **CLOSED** when:
-1. Residual risk level is 🟢 Low or lower
-2. All mitigation strategies are fully implemented
-3. Mitigation effectiveness has been tested
-4. Risk owner has signed off
-
----
-
-## Document Control
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-02-19 | Development Team | Initial risk register with 12 risks |
+## Risk Summary
+
+| Level | Count |
+|-------|-------|
+| 🔴 Critical | 1 |
+| 🟠 High | 3 |
+| 🟡 Medium | 6 |
+| 🟢 Low | 2 |
