@@ -45,7 +45,7 @@ TaskHub solves the problem of managing todos across multiple teams or clients. E
 
 ```bash
 cd server
-dotnet run --project src/TaskHub.Api
+make run
 ```
 
 The API starts at `http://localhost:5078` with InMemory storage by default.
@@ -54,7 +54,7 @@ The API starts at `http://localhost:5078` with InMemory storage by default.
 
 ```bash
 cd server
-dotnet run --project src/TaskHub.Api -- --StorageProvider=File
+run-file
 ```
 
 Or set the environment variable:

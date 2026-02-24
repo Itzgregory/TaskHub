@@ -5,6 +5,8 @@ build:
 
 run:
 	dotnet run --project src/TaskHub.Api/TaskHub.Api.csproj
+run-file:
+	dotnet run --project src/TaskHub.Api -- --StorageProvider=File
 
 clean:
 	dotnet clean
