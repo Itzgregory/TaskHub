@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/dashboard/AppLayout";
 import { StatCard } from "@/components/features/StatCard";
 import { ProgressBar } from "@/components/features/ProgressBar";
 import { EmptyState } from "@/components/features/EmptyState";
-import { KanbanBoard } from "./KanbanBoard";
+import { ManagementBoard } from "@/pages/dashboard/Org-dashboard/Boards/ManagementBoard";
 import { Link } from "@tanstack/react-router";
 import {
   Users, FolderKanban,
@@ -137,7 +137,7 @@ export default function OrgDashboard() {
 
       {/* Board view */}
       {view === 'board' && (
-        <KanbanBoard orgId={activeOrg.orgId} />
+        <ManagementBoard orgId={activeOrg.orgId} />
       )}
 
       {/* Overview view */}

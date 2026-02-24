@@ -11,9 +11,7 @@ import { getInitials } from "@/lib/utils/getInitials";
 import { PRIORITY_COLOR } from "@/lib/utils/priorityColours";
 
 
-// ── KanbanCard ────────────────────────────────────────────────────────────────
-
-interface KanbanCardProps {
+interface ManagementCardProps {
     task: Task;
     orgId: string;
     assigneeName: string | null;
@@ -22,7 +20,7 @@ interface KanbanCardProps {
     direction: "right" | "left";
 }
 
-function KanbanCard({ task, assigneeName, onMove, isMoving, direction }: KanbanCardProps) {
+function ManagementCard({ task, assigneeName, onMove, isMoving, direction }: ManagementCardProps) {
     const today = getTodayStr();
     const overdue = task.dueDate && task.dueDate < today && task.status !== "done";
 
@@ -113,9 +111,9 @@ function KanbanCard({ task, assigneeName, onMove, isMoving, direction }: KanbanC
     );
 }
 
-// ── KanbanColumn ──────────────────────────────────────────────────────────────
+// ── ManagementColumn ──────────────────────────────────────────────────────────────
 
-interface KanbanColumnProps {
+interface ManagementColumnProps {
     title: string;
     count: number;
     accent: string;
@@ -123,7 +121,7 @@ interface KanbanColumnProps {
     onAdd?: () => void;
 }
 
-function KanbanColumn({ title, count, accent, children, onAdd }: KanbanColumnProps) {
+function ManagementColumn({ title, count, accent, children, onAdd }: ManagementColumnProps) {
     return (
         <div className="flex flex-col flex-1 min-w-0">
             {/* Column header */}
@@ -166,13 +164,13 @@ function KanbanColumn({ title, count, accent, children, onAdd }: KanbanColumnPro
     );
 }
 
-// ── KanbanBoard ───────────────────────────────────────────────────────────────
+// ── ManagementBoard ───────────────────────────────────────────────────────────────
 
-interface KanbanBoardProps {
+interface ManagementBoardProps {
     orgId: string;
 }
 
-export function KanbanBoard({ orgId }: KanbanBoardProps) {
+export function ManagementBoard({ orgId }: ManagementBoardProps) {
     const { toast } = useToast();
     const toggleMutation = useToggleTodoStatus();
     const [addingTask, setAddingTask] = useState(false);
@@ -224,7 +222,7 @@ export function KanbanBoard({ orgId }: KanbanBoardProps) {
         <>
             <div className="flex gap-4 items-start overflow-x-auto pb-4">
                 {/* ── Open column ─────────────────────────────────── */}
-                <KanbanColumn
+                <ManagementColumn
                     title="Open"
                     count={openData?.todos.totalCount ?? openTasks.length}
                     accent="var(--c-bluTexAccPri)"
@@ -236,7 +234,7 @@ export function KanbanBoard({ orgId }: KanbanBoardProps) {
                         </p>
                     ) : (
                         openTasks.map(task => (
-                            <KanbanCard
+                            <ManagementCard
                                 key={task.id}
                                 task={task}
                                 orgId={orgId}
@@ -247,7 +245,7 @@ export function KanbanBoard({ orgId }: KanbanBoardProps) {
                             />
                         ))
                     )}
-                </KanbanColumn>
+                </ManagementColumn>
 
                 {/* Divider */}
                 <div
@@ -256,7 +254,7 @@ export function KanbanBoard({ orgId }: KanbanBoardProps) {
                 />
 
                 {/* ── Done column ──────────────────────────────────── */}
-                <KanbanColumn
+                <ManagementColumn
                     title="Done"
                     count={doneData?.todos.totalCount ?? doneTasks.length}
                     accent="var(--c-greTexAccPri)"
@@ -267,7 +265,7 @@ export function KanbanBoard({ orgId }: KanbanBoardProps) {
                         </p>
                     ) : (
                         doneTasks.map(task => (
-                            <KanbanCard
+                            <ManagementCard
                                 key={task.id}
                                 task={task}
                                 orgId={orgId}
@@ -278,7 +276,7 @@ export function KanbanBoard({ orgId }: KanbanBoardProps) {
                             />
                         ))
                     )}
-                </KanbanColumn>
+                </ManagementColumn>
             </div>
 
             {addingTask && (
