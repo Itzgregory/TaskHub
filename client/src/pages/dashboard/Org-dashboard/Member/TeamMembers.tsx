@@ -4,6 +4,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/dashboard/AppLayout";
 import { EmptyState } from "@/components/features/EmptyState";
+import { TablePagination } from "@/components/features/TablePagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +51,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useOrgMembers, useAddMember, useRemoveMember, useChangeRole } from "@/lib/api/hooks";
+import { usePagination } from "@/lib/hooks/usePagination";
 import type { OrgMemberDto, UserRole } from "@/lib/api/types";
 import { ROLE_META, type UiRole } from "@/lib/utils/org-constants";
 import { useToast } from "@/lib/hooks/use-toast";
@@ -85,6 +87,20 @@ export default function TeamMembers() {
     });
   }, [members, roleFilter, search]);
 
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    setItemsPerPage,
+    paginatedItems: paginatedMembers,
+    goToPage,
+    startIndex,
+    endIndex,
+  } = usePagination({
+    items: filtered,
+    pageSize: 5,
+  });
+
   const currentUserRole = members.find(m => m.userId === user?.userId)?.role;
   const isAdmin = currentUserRole === "OrgAdmin";
 
@@ -114,25 +130,6 @@ export default function TeamMembers() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : (err as { message?: string })?.message || "Failed to remove member.";
       toast({ title: "Remove failed", description: message, variant: "destructive" });
-    }
-  };
-
-  const handleChangeRole = async (member: OrgMemberDto) => {
-    if (!activeOrg?.orgId) return;
-    const newRole: UserRole = member.role === "OrgAdmin" ? "Member" : "OrgAdmin";
-    try {
-      await changeRoleMutation.mutateAsync({
-        orgId: activeOrg.orgId,
-        userId: member.userId,
-        data: { orgId: activeOrg.orgId, userId: member.userId, role: newRole },
-      });
-      toast({
-        title: "Role updated",
-        description: `${member.username} is now ${newRole === "OrgAdmin" ? "an Admin" : "a Member"}.`,
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : (err as { message?: string })?.message || "Failed to change role.";
-      toast({ title: "Role change failed", description: message, variant: "destructive" });
     }
   };
 
@@ -188,6 +185,7 @@ export default function TeamMembers() {
         <Table>
           <TableHeader>
             <TableRow style={{ backgroundColor: "var(--c-bacTer)" }}>
+              <TableHead className="w-10 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>S/N</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Member</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Role</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Joined</TableHead>
@@ -197,7 +195,7 @@ export default function TeamMembers() {
           </TableHeader>
 
           <TableBody>
-            {filtered.map(m => {
+            {paginatedMembers.map((m, index) => {
               const uiRole = mapRoleToUi(m.role);
               const roleMeta = ROLE_META[uiRole];
               const RoleIcon = roleMeta.icon;
@@ -208,6 +206,10 @@ export default function TeamMembers() {
                   style={{ backgroundColor: "var(--c-bacSec)", borderColor: "var(--c-borPri)" }}
                   className="hover:bg-[var(--c-bacTer)]"
                 >
+                  <TableCell>
+                    <span className="text-xs" style={{ color: "var(--c-texTer)" }}>{startIndex + index}</span>
+                  </TableCell>
+
                   {/* Member */}
                   <TableCell>
                     <Link
@@ -292,7 +294,7 @@ export default function TeamMembers() {
 
             {filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5}>
+                <TableCell colSpan={6}>
                   <EmptyState
                     icon={<Users className="w-6 h-6" style={{ color: "var(--c-texDis)" }} />}
                     title={isLoading ? "Loading members..." : "No members found"}
@@ -304,7 +306,21 @@ export default function TeamMembers() {
         </Table>
       </div>
 
-      {/* ---- Invite Dialog ---- */}
+      {/* Pagination */}
+      {!isLoading && filtered.length > 0 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filtered.length}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
+      )}
+
+       {/* ---- Invite Dialog ---- */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}>
           <DialogHeader>

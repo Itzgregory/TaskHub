@@ -5,6 +5,7 @@ import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
 import { AddTaskButton } from "../../../components/features/AddTaskButton";
 import { TaskFormModal } from "../../../components/features/TaskFormModal";
 import { EmptyState } from "../../../components/features/EmptyState";
+import { TablePagination } from "../../../components/features/TablePagination";
 import { TaskTableRow } from "@/components/features/TaskTableRow";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useTodos } from "@/lib/api/hooks";
@@ -13,34 +14,92 @@ import { mapTodoDtoToTask } from "@/lib/api/mappers";
 import { getTodayStr } from "@/lib/utils/tasks";
 import { useTaskToggle } from "@/lib/hooks/useTaskToggle";
 import { useOrgMemberMap } from "@/lib/hooks/useOrgMemberMap";
+import { usePagination } from "@/lib/hooks/usePagination";
 import type { Task } from "@/lib/types";
 
-function TaskTable({ rows, memberMap, onEdit, onToggle, isToggling, faded }: {
+function TaskTable({ 
+  rows, 
+  memberMap, 
+  onEdit, 
+  onToggle, 
+  isToggling, 
+  faded,
+  title 
+}: {
   rows: Task[];
   memberMap: Map<string, string>;
   onEdit: (task: Task) => void;
   onToggle: (task: Task) => void;
   isToggling: boolean;
   faded?: boolean;
+  title?: string;
 }) {
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
+    setItemsPerPage,
+    paginatedItems,
+    goToPage,
+    startIndex,
+    endIndex,
+  } = usePagination({
+    items: rows,
+    pageSize: 5,
+  });
+
+  if (rows.length === 0) return null;
+
   return (
-    <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--c-borPri)", opacity: faded ? 0.6 : 1 }}>
-      <Table>
-        <TableHeader>
-          <TableRow style={{ backgroundColor: "var(--c-bacTer)" }}>
-            <TableHead className="w-8" />
-            <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Task</TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Priority</TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Assignee</TableHead>
-            <TableHead className="text-xs font-semibold uppercase tracking-wider text-right" style={{ color: "var(--c-texTer)" }}>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map(task => (
-            <TaskTableRow key={task.id} task={task} memberMap={memberMap} onEdit={onEdit} onToggle={onToggle} isToggling={isToggling} showDueDate={false} showTags={false} />
-          ))}
-        </TableBody>
-      </Table>
+    <div>
+      {title && (
+        <h3 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--c-texTer)" }}>
+          {title} ({rows.length})
+        </h3>
+      )}
+      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--c-borPri)", opacity: faded ? 0.6 : 1 }}>
+        <Table>
+          <TableHeader>
+            <TableRow style={{ backgroundColor: "var(--c-bacTer)" }}>
+              <TableHead className="w-10 text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>#</TableHead>
+              <TableHead className="w-8" />
+              <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Task</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Priority</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--c-texTer)" }}>Assignee</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wider text-right" style={{ color: "var(--c-texTer)" }}>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedItems.map((task, index) => (
+              <TaskTableRow 
+                key={task.id} 
+                task={task} 
+                memberMap={memberMap} 
+                onEdit={onEdit} 
+                onToggle={onToggle} 
+                isToggling={isToggling} 
+                showDueDate={false} 
+                showTags={false}
+                serialNumber={startIndex + index} 
+              />
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {/* Pagination for this table */}
+      {rows.length > 0 && (
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={rows.length}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
+      )}
     </div>
   );
 }
@@ -107,14 +166,27 @@ export default function TodayPage() {
       {pendingTasks.length === 0 && doneTasks.length === 0 ? (
         <EmptyState icon={<Sun className="w-6 h-6" style={{ color: "var(--c-texDis)" }} />} title="No tasks for today" description="Add a task with today's due date to see it here" />
       ) : (
-        <div className="space-y-6">
-          {pendingTasks.length > 0 && <TaskTable rows={pendingTasks} memberMap={memberMap} onEdit={setEditingTask} onToggle={toggle} isToggling={isToggling} />}
-          {doneTasks.length > 0 && (
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--c-texTer)" }}>Completed ({doneTasks.length})</h3>
-              <TaskTable rows={doneTasks} memberMap={memberMap} onEdit={setEditingTask} onToggle={toggle} isToggling={isToggling} faded />
-            </div>
-          )}
+        <div className="space-y-8">
+          {/* Pending Tasks Section with Pagination */}
+          <TaskTable 
+            rows={pendingTasks} 
+            memberMap={memberMap} 
+            onEdit={setEditingTask} 
+            onToggle={toggle} 
+            isToggling={isToggling} 
+            title="Pending"
+          />
+          
+          {/* Completed Tasks Section with Pagination */}
+          <TaskTable 
+            rows={doneTasks} 
+            memberMap={memberMap} 
+            onEdit={setEditingTask} 
+            onToggle={toggle} 
+            isToggling={isToggling} 
+            faded 
+            title="Completed"
+          />
         </div>
       )}
 

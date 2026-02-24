@@ -17,6 +17,7 @@ interface TaskTableRowProps {
   isToggling: boolean;
   showDueDate?: boolean;
   showTags?: boolean;
+  serialNumber?: number; 
 }
 
 export function TaskTableRow({
@@ -27,6 +28,7 @@ export function TaskTableRow({
   isToggling,
   showDueDate = true,
   showTags = false,
+  serialNumber, 
 }: TaskTableRowProps) {
   const today = getTodayStr();
   const isDone = task.status === "done";
@@ -38,6 +40,13 @@ export function TaskTableRow({
       style={{ backgroundColor: "var(--c-bacSec)", borderColor: "var(--c-borPri)" }}
       className="hover:bg-[var(--c-bacTer)]"
     >
+      {/* Serial number - new column */}
+      {serialNumber !== undefined && (
+        <TableCell className="w-10 text-xs" style={{ color: "var(--c-texTer)" }}>
+          {serialNumber}
+        </TableCell>
+      )}
+
       {/* Status icon */}
       <TableCell className="w-8 pr-0">
         {isDone

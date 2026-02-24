@@ -130,7 +130,7 @@ export default function OrgDashboard() {
               border: "1px solid var(--c-borPri)",
             }}
           >
-            {v === 'board' ? '🗂 Board' : '📊 Overview'}
+            {v === 'board' ? 'Management Board' : 'Overview'}
           </button>
         ))}
       </div>

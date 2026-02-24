@@ -14,14 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const PRIORITY_OPTIONS: { value: Priority; label: string }[] = [
-  { value: "urgent", label: "🔴 Urgent" },
-  { value: "high", label: "🟠 High" },
-  { value: "medium", label: "🟡 Medium" },
-  { value: "low", label: "🟢 Low" },
-  { value: "none", label: "— None" },
-];
+import { PRIORITY_OPTIONS } from "@/lib/utils/priorityColours";
 
 // Use a special value for unassigned that's not an empty string
 const UNASSIGNED_VALUE = "unassigned";
@@ -51,23 +44,46 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "none");
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? "");
   const [tags, setTags] = useState(task?.tags.join(", ") ?? "");
-  // Store as empty string for unassigned in state, but use special value for select
   const [assignedToUserId, setAssignedToUserId] = useState(task?.assignedToUserId ?? "");
+
+  // Validation states
+  const [titleTouched, setTitleTouched] = useState(false);
+  const [dueDateTouched, setDueDateTouched] = useState(false);
+  const [priorityTouched, setPriorityTouched] = useState(false);
+  const [assigneeTouched, setAssigneeTouched] = useState(false);
+  const [tagsTouched, setTagsTouched] = useState(false);
+
+  // Validation functions
+  const isTitleValid = title.trim().length > 0;
+  const isDueDateValid = dueDate.trim().length > 0;
+  const isPriorityValid = priority !== "none";
+  const isAssigneeValid = assignedToUserId.trim().length > 0;
+  const isTagsValid = tags.trim().length > 0;
+
+  const isFormValid = isTitleValid && isDueDateValid && isPriorityValid && isAssigneeValid && isTagsValid;
 
   // Convert between empty string and UNASSIGNED_VALUE for the Select component
   const selectAssigneeValue = assignedToUserId === "" ? UNASSIGNED_VALUE : assignedToUserId;
 
   const handleAssigneeChange = (value: string) => {
-    // Convert UNASSIGNED_VALUE back to empty string for the actual state
+    setAssigneeTouched(true);
     setAssignedToUserId(value === UNASSIGNED_VALUE ? "" : value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !orgId) return;
+    
+    // Mark all fields as touched for validation
+    setTitleTouched(true);
+    setDueDateTouched(true);
+    setPriorityTouched(true);
+    setAssigneeTouched(true);
+    setTagsTouched(true);
+
+    if (!isFormValid || !orgId) return;
 
     const tagArray = tags.split(",").map(t => t.trim()).filter(Boolean);
-    const assignee = assignedToUserId || undefined; // Empty string becomes undefined
+    const assignee = assignedToUserId || undefined; 
 
     try {
       if (isEditing && task) {
@@ -79,7 +95,7 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
             description: description.trim() || undefined,
             priority,
             projectId: task.projectId ?? orgId,
-            dueDate: dueDate || undefined,
+            dueDate: dueDate,
             tags: tagArray,
             assignedToUserId: assignee,
           },
@@ -97,7 +113,7 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
             description: description.trim() || undefined,
             priority,
             projectId: defaultProjectId,
-            dueDate: dueDate || undefined,
+            dueDate: dueDate,
             tags: tagArray,
             assignedToUserId: assignee,
           },
@@ -143,20 +159,28 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-          {/* Title */}
-          <Input
-            autoFocus
-            type="text"
-            placeholder="Task title..."
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            className="text-base font-medium border-0 bg-transparent shadow-none focus-visible:ring-0"
-            style={{ color: "var(--c-texPri)" }}
-          />
+          {/* Title - Required */}
+          <div className="space-y-1">
+            <Input
+              autoFocus
+              type="text"
+              placeholder="Task title *"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              onBlur={() => setTitleTouched(true)}
+              className={`text-base font-medium border-0 bg-transparent shadow-none focus-visible:ring-0 ${
+                titleTouched && !isTitleValid ? "border-l-2 border-red-500 pl-2" : ""
+              }`}
+              style={{ color: "var(--c-texPri)" }}
+            />
+            {titleTouched && !isTitleValid && (
+              <p className="text-xs text-red-500">Title is required</p>
+            )}
+          </div>
 
-          {/* Description */}
+          {/* Description - Optional */}
           <textarea
-            placeholder="Add description..."
+            placeholder="Add description... (optional)"
             value={description}
             onChange={e => setDescription(e.target.value)}
             rows={2}
@@ -166,17 +190,22 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
 
           {/* Meta fields */}
           <div
-            className="flex flex-wrap items-center gap-2 pt-2"
+            className="flex flex-wrap items-start gap-2 pt-2"
             style={{ borderTop: "1px solid var(--c-borPri)" }}
           >
-            {/* Priority */}
+            {/* Priority - Required */}
             <div className="relative">
-              <Select value={priority} onValueChange={(value: Priority) => setPriority(value)}>
+              <Select value={priority} onValueChange={(value: Priority) => {
+                setPriority(value);
+                setPriorityTouched(true);
+              }}>
                 <SelectTrigger 
-                  className="w-[130px] h-8 pl-7"
+                  className={`w-[130px] h-8 pl-7 ${
+                    priorityTouched && !isPriorityValid ? "border-red-500" : ""
+                  }`}
                   style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}
                 >
-                  <SelectValue placeholder="Priority" />
+                  <SelectValue placeholder="Priority *" />
                 </SelectTrigger>
                 <SelectContent style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}>
                   {PRIORITY_OPTIONS.map(opt => (
@@ -192,15 +221,17 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
               />
             </div>
 
-            {/* Assign to Member */}
+            {/* Assign to Member - Required */}
             {members.length > 0 && (
               <div className="relative">
                 <Select value={selectAssigneeValue} onValueChange={handleAssigneeChange}>
                   <SelectTrigger 
-                    className="w-[140px] h-8 pl-7"
+                    className={`w-[140px] h-8 pl-7 ${
+                      assigneeTouched && !isAssigneeValid ? "border-red-500" : ""
+                    }`}
                     style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}
                   >
-                    <SelectValue placeholder="Unassigned" />
+                    <SelectValue placeholder="Assignee *" />
                   </SelectTrigger>
                   <SelectContent style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}>
                     <SelectItem value={UNASSIGNED_VALUE}>Unassigned</SelectItem>
@@ -218,13 +249,19 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
               </div>
             )}
 
-            {/* Due Date */}
+            {/* Due Date - Required */}
             <div className="relative">
               <Input
                 type="date"
                 value={dueDate}
-                onChange={e => setDueDate(e.target.value)}
-                className="h-8 py-1.5 border-0 shadow-none focus-visible:ring-0"
+                onChange={e => {
+                  setDueDate(e.target.value);
+                  setDueDateTouched(true);
+                }}
+                onBlur={() => setDueDateTouched(true)}
+                className={`h-8 py-1.5 border-0 shadow-none focus-visible:ring-0 ${
+                  dueDateTouched && !isDueDateValid ? "border-red-500" : ""
+                }`}
                 style={{ 
                   backgroundColor: "var(--c-bacEle)", 
                   borderColor: "var(--c-borPri)",
@@ -238,16 +275,31 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
               />
             </div>
 
-            {/* Tags */}
-            <Input
-              type="text"
-              placeholder="Tags (comma separated)"
-              value={tags}
-              onChange={e => setTags(e.target.value)}
-              className="h-8 py-1.5 border-0 shadow-none focus-visible:ring-0 flex-1 min-w-[180px]"
-              style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}
-            />
+            {/* Tags - Required */}
+            <div className="relative flex-1 min-w-[180px]">
+              <Input
+                type="text"
+                placeholder="Tags * (comma separated)"
+                value={tags}
+                onChange={e => {
+                  setTags(e.target.value);
+                  setTagsTouched(true);
+                }}
+                onBlur={() => setTagsTouched(true)}
+                className={`h-8 py-1.5 border-0 shadow-none focus-visible:ring-0 w-full ${
+                  tagsTouched && !isTagsValid ? "border-red-500" : ""
+                }`}
+                style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}
+              />
+            </div>
           </div>
+
+          {/* Validation summary */}
+          {!isFormValid && (titleTouched || dueDateTouched || priorityTouched || assigneeTouched || tagsTouched) && (
+            <div className="text-xs text-red-500 mt-2">
+              Please fill in all required fields (*)
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-1">
@@ -261,8 +313,9 @@ export function TaskFormModal({ task, defaultProjectId, defaultOrgId, defaultDue
             </Button>
             <Button
               type="submit"
-              disabled={!title.trim() || !orgId || createMutation.isPending || updateMutation.isPending}
+              disabled={!isFormValid || !orgId || createMutation.isPending || updateMutation.isPending}
               style={{ backgroundColor: "var(--c-bluTexAccPri)", color: "var(--c-bacPri)" }}
+              title={!isFormValid ? "All fields except description are required" : ""}
             >
               {createMutation.isPending || updateMutation.isPending
                 ? "Saving..."
