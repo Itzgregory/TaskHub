@@ -13,7 +13,7 @@ import { useToast } from "@/lib/hooks/use-toast";
 
 export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const { setUser } = useAuth();
   const { toast } = useToast();
   const registerMutation = useRegister();
