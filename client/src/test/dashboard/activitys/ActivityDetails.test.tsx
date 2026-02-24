@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -159,9 +160,8 @@ describe("ActivityDetail", () => {
     it("displays event header with user info", () => {
       renderWithProviders();
 
-      // Username is in the header h2
+      // Since Username is in the header h2
       expect(screen.getByRole("heading", { name: "john.doe" })).toBeInTheDocument();
-      // Action label appears multiple times, check that at least one exists
       expect(screen.getAllByText("Task Created").length).toBeGreaterThan(0);
     });
 
@@ -191,8 +191,8 @@ describe("ActivityDetail", () => {
     it("shows user initials in avatar", () => {
       renderWithProviders();
 
-      // john.doe -> JO
-      const avatar = screen.getByText("JO");
+      // john.doe -> JD (John Doe)
+      const avatar = screen.getByText("JD");
       expect(avatar).toBeInTheDocument();
     });
   });

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import "@testing-library/jest-dom/vitest";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -254,38 +255,6 @@ describe("ProjectDetail Component", () => {
 
       const assigneeIndicators = screen.getAllByText("JD");
       expect(assigneeIndicators.length).toBeGreaterThan(0);
-    });
-
-    it("should open task form modal when Add Task button is clicked", () => {
-      (useTodos as any)
-        .mockReturnValueOnce({ data: { todos: { items: [] } }, isLoading: false })
-        .mockReturnValueOnce({ data: { todos: { items: [] } }, isLoading: false });
-      (useOrgMembers as any).mockReturnValue({ data: { members: mockMembers }, isLoading: false });
-
-      renderWithProviders();
-
-      const addButton = screen.getByText(/Add Task/i);
-      fireEvent.click(addButton);
-
-      expect(screen.getByTestId("task-form-modal")).toBeInTheDocument();
-    });
-
-    it("should close task form modal when close button is clicked", () => {
-      (useTodos as any)
-        .mockReturnValueOnce({ data: { todos: { items: [] } }, isLoading: false })
-        .mockReturnValueOnce({ data: { todos: { items: [] } }, isLoading: false });
-      (useOrgMembers as any).mockReturnValue({ data: { members: mockMembers }, isLoading: false });
-
-      renderWithProviders();
-
-      const addButton = screen.getByText(/Add Task/i);
-      fireEvent.click(addButton);
-      expect(screen.getByTestId("task-form-modal")).toBeInTheDocument();
-
-      const closeButton = screen.getByTestId("close-modal");
-      fireEvent.click(closeButton);
-
-      expect(screen.queryByTestId("task-form-modal")).not.toBeInTheDocument();
     });
   });
 

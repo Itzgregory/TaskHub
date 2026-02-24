@@ -1,10 +1,13 @@
 import { AppLayout } from "../../../components/layout/dashboard/AppLayout";
 import { useStore, actions } from "../../../lib/store";
 import { useTheme } from "../../../lib/theme-provider";
-import { Sun, Moon, Trash2, Download, Upload } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { ThemeSelector } from "@/components/features/settings/ThemeSelector";
+import { ExportButton } from "@/components/features/settings/ExportButton";
+import { ImportButton } from "@/components/features/settings/ImportButton";
+import { ImportReport } from "@/components/features/settings/ImportReport";
+import { ClearCompletedButton } from "@/components/features/settings/ClearCompletedButton";
+import { AboutStats } from "@/components/features/settings/AboutStats";
 import { useExportTodos, useImportTodos } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useToast } from "@/lib/hooks/use-toast";
@@ -21,7 +24,6 @@ export default function SettingsPage() {
   const [importResult, setImportResult] = useState<{ acceptedCount: number; rejectedCount: number; rejectedRows?: Array<{ rowIndex: number; errors: string[] }> } | null>(null);
 
   const handleThemeChange = (newTheme: "light" | "dark") => {
-    // Update both theme systems
     dispatch(actions.setTheme(newTheme));
     setThemeProvider(newTheme);
   };
@@ -69,7 +71,6 @@ export default function SettingsPage() {
     } catch {
       toast({ title: "Import failed", description: "Could not parse or import the file.", variant: "destructive" });
     }
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -78,209 +79,55 @@ export default function SettingsPage() {
   return (
     <AppLayout title="Settings">
       <div className="max-w-2xl space-y-6">
+        {/* Hidden file input for import */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,.csv"
+          onChange={handleFileSelected}
+          className="hidden"
+        />
+
         {/* Appearance Section */}
-        <Card
-          style={{
-            backgroundColor: "var(--c-bacEle)",
-            borderColor: "var(--c-borPri)",
-          }}
-        >
+        <Card style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}>
           <CardHeader>
-            <CardTitle className="text-base" style={{ color: "var(--c-texPri)" }}>
-              Appearance
-            </CardTitle>
-            <CardDescription style={{ color: "var(--c-texSec)" }}>
-              Choose your theme preference
-            </CardDescription>
+            <CardTitle className="text-base" style={{ color: "var(--c-texPri)" }}>Appearance</CardTitle>
+            <CardDescription style={{ color: "var(--c-texSec)" }}>Choose your theme preference</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-3">
-              {(["light", "dark"] as const).map((t) => {
-                const isActive = state.theme === t;
-                return (
-                  <Button
-                    key={t}
-                    variant="outline" // Always use outline, let our styles override
-                    onClick={() => handleThemeChange(t)}
-                    className="flex-1 flex items-center justify-center gap-2 h-auto py-4"
-                    style={{
-                      backgroundColor: isActive ? "var(--c-bluBacAccPri)" : "var(--c-bacSec)",
-                      borderColor: isActive ? "var(--c-bluBacAccPri)" : "var(--c-borPri)",
-                      color: isActive ? "#fff" : "var(--c-texSec)",
-                    }}
-                  >
-                    {t === "light" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    {t.charAt(0).toUpperCase() + t.slice(1)}
-                  </Button>
-                );
-              })}
-            </div>
+            <ThemeSelector currentTheme={state.theme} onThemeChange={handleThemeChange} />
           </CardContent>
         </Card>
 
         {/* Data Section */}
-        <Card
-          style={{
-            backgroundColor: "var(--c-bacEle)",
-            borderColor: "var(--c-borPri)",
-          }}
-        >
+        <Card style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}>
           <CardHeader>
-            <CardTitle className="text-base" style={{ color: "var(--c-texPri)" }}>
-              Data Management
-            </CardTitle>
+            <CardTitle className="text-base" style={{ color: "var(--c-texPri)" }}>Data Management</CardTitle>
             <CardDescription style={{ color: "var(--c-texSec)" }}>
               Export your data or clear completed tasks
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button
-              variant="outline"
-              onClick={handleExport}
-              className="w-full flex items-center justify-start gap-3 h-auto py-3 px-4"
-              style={{
-                borderColor: "var(--c-borPri)",
-                backgroundColor: "var(--c-bacSec)",
-                color: "var(--c-texPri)",
-              }}
-            >
-              <Download className="w-4 h-4" style={{ color: "var(--c-texTer)" }} />
-              <div className="text-left">
-                <div className="text-sm font-medium">Export Data</div>
-                <div className="text-xs" style={{ color: "var(--c-texTer)" }}>
-                  Download all tasks as JSON
-                </div>
-              </div>
-            </Button>
-
-            {/* Hidden file input for import */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,.csv"
-              onChange={handleFileSelected}
-              className="hidden"
-            />
-
-            <Button
-              variant="outline"
-              onClick={handleImportClick}
-              disabled={!activeOrg}
-              className="w-full flex items-center justify-start gap-3 h-auto py-3 px-4"
-              style={{
-                borderColor: "var(--c-borPri)",
-                backgroundColor: "var(--c-bacSec)",
-                color: "var(--c-texPri)",
-                opacity: activeOrg ? 1 : 0.5,
-              }}
-            >
-              <Upload className="w-4 h-4" style={{ color: "var(--c-texTer)" }} />
-              <div className="text-left">
-                <div className="text-sm font-medium">Import Data</div>
-                <div className="text-xs" style={{ color: "var(--c-texTer)" }}>
-                  Upload a JSON or CSV file to import tasks
-                </div>
-              </div>
-            </Button>
-
-            {/* Import rejection report */}
-            {importResult && importResult.rejectedCount > 0 && (
-              <div
-                className="rounded-xl p-4 space-y-2"
-                style={{
-                  backgroundColor: "var(--c-yelBacSec)",
-                  border: "1px solid var(--c-yelBorPri)",
-                }}
-              >
-                <p className="text-sm font-medium" style={{ color: "var(--c-yelTexAccPri)" }}>
-                  {importResult.rejectedCount} row(s) rejected
-                </p>
-                {importResult.rejectedRows?.map((row) => (
-                  <div key={row.rowIndex} className="text-xs" style={{ color: "var(--c-texSec)" }}>
-                    <span className="font-mono font-semibold">Row {row.rowIndex + 1}:</span>{" "}
-                    {row.errors.join(", ")}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <Button
-              variant="outline"
-              onClick={handleClearCompleted}
-              className="w-full flex items-center justify-start gap-3 h-auto py-3 px-4"
-              style={{
-                borderColor: "var(--c-borPri)",
-                backgroundColor: "var(--c-bacSec)",
-                color: "var(--c-texPri)",
-              }}
-              disabled={completedCount === 0}
-              onMouseEnter={(e) => {
-                if (!completedCount) return;
-                e.currentTarget.style.backgroundColor = "var(--c-redBacSec)";
-                e.currentTarget.style.borderColor = "var(--c-redBorPri)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--c-bacSec)";
-                e.currentTarget.style.borderColor = "var(--c-borPri)";
-              }}
-            >
-              <Trash2 className="w-4 h-4" style={{ color: "var(--c-texTer)" }} />
-              <div className="text-left">
-                <div className="text-sm font-medium">Clear Completed Tasks</div>
-                <div className="text-xs" style={{ color: "var(--c-texTer)" }}>
-                  {completedCount === 0
-                    ? "No completed tasks"
-                    : `Remove ${completedCount} completed task(s)`}
-                </div>
-              </div>
-            </Button>
+            <ExportButton onExport={handleExport} disabled={!activeOrg} />
+            <ImportButton onImport={handleImportClick} disabled={!activeOrg} />
+            <ImportReport report={importResult} />
+            <ClearCompletedButton onClear={handleClearCompleted} completedCount={completedCount} />
           </CardContent>
         </Card>
 
         {/* About Section */}
-        <Card
-          style={{
-            backgroundColor: "var(--c-bacEle)",
-            borderColor: "var(--c-borPri)",
-          }}
-        >
+        <Card style={{ backgroundColor: "var(--c-bacEle)", borderColor: "var(--c-borPri)" }}>
           <CardHeader>
-            <CardTitle className="text-base" style={{ color: "var(--c-texPri)" }}>
-              About
-            </CardTitle>
+            <CardTitle className="text-base" style={{ color: "var(--c-texPri)" }}>About</CardTitle>
             <CardDescription style={{ color: "var(--c-texSec)" }}>
               TaskHub version and statistics
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div
-              className="rounded-xl p-4 space-y-2"
-              style={{
-                backgroundColor: "var(--c-bacSec)",
-                border: "1px solid var(--c-borPri)",
-              }}
-            >
-              {[
-                { label: "Version", value: "1.0.0" },
-                { label: "Tasks", value: String(state.tasks.length) },
-                { label: "Projects", value: String(state.projects.length) },
-              ].map(({ label, value }, index) => (
-                <div key={label}>
-                  <div className="flex justify-between text-sm">
-                    <span style={{ color: "var(--c-texTer)" }}>{label}</span>
-                    <span className="font-mono" style={{ color: "var(--c-texSec)" }}>
-                      {value}
-                    </span>
-                  </div>
-                  {index < 2 && (
-                    <Separator
-                      className="my-2"
-                      style={{ backgroundColor: "var(--c-borSec)" }}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
+            <AboutStats 
+              taskCount={state.tasks.length} 
+              projectCount={state.projects.length} 
+            />
           </CardContent>
         </Card>
       </div>
