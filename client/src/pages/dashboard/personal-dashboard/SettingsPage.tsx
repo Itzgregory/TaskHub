@@ -12,6 +12,7 @@ import { useExportTodos, useImportTodos } from "@/lib/api/hooks";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useToast } from "@/lib/hooks/use-toast";
 import { useRef, useState } from "react";
+import { Input } from "@/components/ui/input";
 
 export default function SettingsPage() {
   const { state, dispatch } = useStore();
@@ -78,9 +79,9 @@ export default function SettingsPage() {
 
   return (
     <AppLayout title="Settings">
-      <div className="max-w-2xl space-y-6">
+      <div className="space-y-6">
         {/* Hidden file input for import */}
-        <input
+        <Input
           ref={fileInputRef}
           type="file"
           accept=".json,.csv"

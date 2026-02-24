@@ -87,9 +87,11 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
           isMobile={isMobile}
           mobileMenuOpen={mobileMenuOpen}
         />
-        <main className="flex-1 px-4 sm:px-6 py-6 max-w-3xl w-full">
-          {children}
-        </main>
+       <main className="flex-1 px-4 sm:px-6 py-6 flex justify-center">
+  <div className="w-full">
+    {children}
+  </div>
+</main>
       </div>
 
       {taskFormOpen && (

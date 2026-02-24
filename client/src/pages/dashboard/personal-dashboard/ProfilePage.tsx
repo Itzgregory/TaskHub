@@ -25,7 +25,7 @@ export default function ProfilePage() {
 
   return (
     <AppLayout title="Profile">
-      <div className="max-w-md space-y-6">
+      <div className="space-y-6">
         {/* Avatar */}
         <div className="flex items-center gap-4">
           <div

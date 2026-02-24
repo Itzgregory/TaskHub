@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useAuditLog, useOrgMembers } from "@/lib/api/hooks";
 import { AUTH_ACTIONS, getTimeGroup } from "@/lib/utils/activity";
 
-export function useActivityData(orgId?: string, pageSize = 30) {
+export function useActivityData(orgId?: string, pageSize = 15) {
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useAuditLog(
