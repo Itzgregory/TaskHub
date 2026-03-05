@@ -52,7 +52,7 @@ Every log entry includes:
 
 ## Health Checks
 
-### Liveness — `GET /api/v1/health/live`
+### Liveness — `GET /api/v1/health`
 
 **Purpose:** "Is the process running?"
 
